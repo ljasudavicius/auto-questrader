@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AutoQuestrader.apiModels
 {
-    public class Token
+    public class AuthTokenResponse
     {
         public string access_token { get; set; }
         public string token_type { get; set; }

@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="6a1f7cbf-55c5-41ab-9b40-fe374a1972cf" ChangeDateTime="08/16/2017 23:41:58">
+    <Property Name="ElementName" Value="[dbo].[StockTarget].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[StockTarget]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="ID" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="e059abf9-9417-48ca-b453-e7e6c79c61d5" ChangeDateTime="08/16/2017 23:42:34">
+    <Property Name="ElementName" Value="[dbo].[StockTarget].[Symbol]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[StockTarget]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="SymbolName" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="ac7a3a37-d2c3-4763-a482-57ac569440c6" ChangeDateTime="08/16/2017 23:46:10">
+    <Property Name="ElementName" Value="[dbo].[Category].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Category]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="ID" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="bdaf2e1f-2300-48c5-9c0d-c201b360660b" ChangeDateTime="08/16/2017 23:47:05">
+    <Property Name="ElementName" Value="[dbo].[Category].[ID]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Category]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="Name" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="faf766ba-9672-49e0-b4c0-b7dd16bfda11" ChangeDateTime="08/16/2017 23:47:38">
+    <Property Name="ElementName" Value="[dbo].[StockTarget].[CategoryID]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[StockTarget]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CategoryName" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="ca308049-44d6-41b9-a9d4-52f96d6cb22d" ChangeDateTime="08/16/2017 23:48:53">
+    <Property Name="ElementName" Value="[dbo].[Category].[Percent]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Category]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="TargetPercent" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="01533c1b-0223-46cf-9512-ed3c6fe4832d" ChangeDateTime="08/17/2017 19:11:16">
+    <Property Name="ElementName" Value="[dbo].[Token].[AuthToken]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Token]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="AccessToken" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="2113a8b6-a7f4-4999-a0ab-23263c07e505" ChangeDateTime="08/17/2017 19:11:26">
+    <Property Name="ElementName" Value="[dbo].[Token].[Url]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Token]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="ApiUrl" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="356434c1-2236-4f19-89e1-95fe5bab80a6" ChangeDateTime="08/17/2017 19:11:32">
+    <Property Name="ElementName" Value="[dbo].[Token].[ApiUrl]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Token]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="ApiServer" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="51b65371-cf19-4314-b67f-1854714de990" ChangeDateTime="08/17/2017 19:16:07">
+    <Property Name="ElementName" Value="[dbo].[Token].[ApiServer]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Token]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="LoginServer" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="45fb458d-6fe9-4617-8cab-5215d353e797" ChangeDateTime="08/17/2017 19:16:13">
+    <Property Name="ElementName" Value="[dbo].[Token].[Api]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Token]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="ApiServer" />
+  </Operation>
+</Operations>

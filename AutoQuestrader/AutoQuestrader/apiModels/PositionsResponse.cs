@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace AutoQuestrader.apiModels
 {
-    public class User
+    public class PositionsResponse
     {
-        public string userId { get; set; }
-        public List<Account> accounts { get; set; }
+        public List<Position> positions { get; set; }
     }
-
 }

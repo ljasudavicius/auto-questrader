@@ -13,25 +13,35 @@ namespace AutoQuestrader
 {
     class Program
     {
+        public static RestRequest accountsRequest = new RestRequest("v1/accounts", Method.GET);
+        public static RestRequest positionsRequest = new RestRequest("/v1/accounts/{accountNumber}/positions", Method.GET);
+        public static RestRequest balancesRequest = new RestRequest("/v1/accounts/{accountNumber}/balances", Method.GET);
+
+
         static void Main(string[] args)
         {
-            string qtToken = "FYU1kZ68CoYXCfIBdfmDdCT6p14A8sTo0";
+            var db = new AutoQuestraderEntities();
 
-            var authClient = new RestClient("https://login.questrade.com");
+            var token = AuthHelper.RefreshToken(db, false);
 
-            var request = new RestRequest("oauth2/token", Method.GET);
-            request.AddParameter("grant_type", "refresh_token");
-            request.AddParameter("refresh_token", qtToken);
+            var client = new RestClient(token.ApiServer);
+            client.AddDefaultHeader("Authorization", token.TokenType + " " + token.AccessToken);
 
-            IRestResponse<Token> responseToken = authClient.Execute<Token>(request);
+           
+            User responseUser = client.Execute<User>(accountsRequest).Data;
 
-   
-            var client = new RestClient(responseToken.Data.api_server);
-            client.AddDefaultHeader("Authorization", responseToken.Data.token_type + " " + responseToken.Data.access_token);
+            foreach (var curAccount in responseUser.accounts)
+            {
+                positionsRequest.AddUrlSegment("accountNumber", curAccount.number);
+                var y = client.Execute<PositionsResponse>(positionsRequest);
+                PositionsResponse positions = client.Execute<PositionsResponse>(positionsRequest).Data;
 
-            var accountsRequest = new RestRequest("v1/accounts", Method.GET);
+                balancesRequest.AddUrlSegment("accountNumber", curAccount.number);
 
-            IRestResponse<User> responseUser = client.Execute<User>(accountsRequest);
+                var t = client.Execute<BalancesResponse>(balancesRequest);
+                List<BalancesResponse> balances = client.Execute<List<BalancesResponse>>(balancesRequest).Data;
+            }
+
         }
     }
 }
