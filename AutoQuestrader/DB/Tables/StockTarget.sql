@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[StockTarget]
 (
     [SymbolName] VARCHAR(50) NOT NULL, 
-    [TargetPercent] FLOAT NULL, 
+    [TargetPercent] FLOAT NOT NULL, 
     [CategoryName] VARCHAR(50) NOT NULL, 
     [ShouldBuy] BIT NOT NULL, 
     [ShouldSell] BIT NOT NULL, 

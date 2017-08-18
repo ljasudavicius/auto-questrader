@@ -9,15 +9,15 @@ namespace AutoQuestrader.apiModels
     public class Position
     {
         public string symbol { get; set; }
-        public string symbolId { get; set; }
-        public string openQuantity { get; set; }
-        public string currentMarketValue { get; set; }
-        public string currentPrice { get; set; }
-        public string averageEntryPrice { get; set; }
-        public string closedPnl { get; set; }
-        public string openPnl { get; set; }
-        public string totalCost { get; set; }
-        public string isRealTim { get; set; }
-        public string isUnderReorg { get; set; }
+        public int symbolId { get; set; }
+        public double openQuantity { get; set; }
+        public double currentMarketValue { get; set; }
+        public double currentPrice { get; set; }
+        public double averageEntryPrice { get; set; }
+        public double closedPnl { get; set; }
+        public double openPnl { get; set; }
+        public double totalCost { get; set; }
+        public bool isRealTime { get; set; }
+        public bool isUnderReorg { get; set; }
     }
 }

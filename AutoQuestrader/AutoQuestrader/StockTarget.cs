@@ -15,7 +15,7 @@ namespace AutoQuestrader
     public partial class StockTarget
     {
         public string SymbolName { get; set; }
-        public Nullable<double> TargetPercent { get; set; }
+        public double TargetPercent { get; set; }
         public string CategoryName { get; set; }
         public bool ShouldBuy { get; set; }
         public bool ShouldSell { get; set; }

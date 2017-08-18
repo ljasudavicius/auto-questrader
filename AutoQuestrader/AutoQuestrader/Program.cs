@@ -33,6 +33,8 @@ namespace AutoQuestrader
                 PositionsResponse positions = GetPositions(curAccount.number);
 
                 BalancesResponse balances = GetBalances(curAccount.number);
+                var totalEquityInCAD = balances.combinedBalances.FirstOrDefault(p => p.currency == "CAD").totalEquity;
+                var totalEquityInUSD = balances.combinedBalances.FirstOrDefault(p => p.currency == "USD").totalEquity;
 
                 var accountCategories = db.AccountCategories.Where(p => p.AccountNumber == curAccount.number);
 
@@ -43,6 +45,24 @@ namespace AutoQuestrader
 
                         var symbol = GetSymbol(curStockTarget.SymbolName);
                         var quote = GetQuote(symbol.symbolId);
+
+                        var curPosition = positions.positions.FirstOrDefault(p => p.symbol == curStockTarget.SymbolName);
+
+                        double currentPercent = 0;
+                        double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
+                        if (curPosition != null) {
+                            currentPercent = (curPosition.currentMarketValue / totalEquity)*100;
+                        }
+
+                        double percentOfTarget = (currentPercent / curStockTarget.TargetPercent)*100;
+
+                        if (percentOfTarget < 90) {
+
+                            var valueToBuy = ((curStockTarget.TargetPercent - currentPercent)/100) * totalEquity;
+                            int numSharesToBuy = (int)Math.Floor(valueToBuy / quote.askPrice);
+
+                            CreateMarketBuyOrder(curAccount.number, symbol.symbolId, numSharesToBuy);
+                        }
                     }
                 }
             }
@@ -66,9 +86,6 @@ namespace AutoQuestrader
             var request = new RestRequest("/v1/symbols/", Method.GET);
             request.AddParameter("names", symbolName);
 
-
-            var t = client.Execute<SymbolsResponse>(request);
-
             return client.Execute<SymbolsResponse>(request).Data.symbols.FirstOrDefault();
         }
 
@@ -77,10 +94,52 @@ namespace AutoQuestrader
             var request = new RestRequest("/v1/markets/quotes/{symbolId}", Method.GET);
             request.AddUrlSegment("symbolId", symbolId.ToString());
 
-
-            var t = client.Execute<QuotesResponse>(request);
-
             return client.Execute<QuotesResponse>(request).Data.quotes.FirstOrDefault();
         }
+
+        public static void CreateMarketBuyOrder(string accountNumber, int symbolId, int quantity)
+        {
+            var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddHeader("Content-Type", "application/json; charset=utf-8");
+            request.AddHeader("Accept", "application/json");
+            request.AddUrlSegment("accountNumber", accountNumber);
+
+
+            //    var body = new {
+            //        accountNumber = accountNumber,
+            //        symbolId= symbolId,
+            //        quantity= quantity,
+            //        icebergQuantity= 1,
+            //        limitPrice= 537,
+            //        isAllOrNone= true,
+            //        isAnonymous= false,
+            //        orderType= "Limit",
+            //        timeInForce= "GoodTillCanceled",
+            //        action= "Buy",
+            //        primaryRoute= "AUTO",
+            //        secondaryRoute= "AUTO"
+            //    };
+
+            //request.AddParameter("text/json", body, ParameterType.RequestBody);
+
+            request.AddParameter("symbolId", symbolId);
+            request.AddParameter("quantity", quantity);
+            request.AddParameter("orderType", "Market");
+            request.AddParameter("action", "Buy");
+            request.AddParameter("primaryRoute", "AUTO");
+            request.AddParameter("secondaryRoute", "AUTO");
+            request.AddParameter("timeInForce", "ImmediateOrCancel");
+
+            request.AddParameter("icebergQuantity", 1);
+            request.AddParameter("limitPrice", 0);
+            request.AddParameter("stopPrice", 0);
+            request.AddParameter("isAllOrNone", false);
+            request.AddParameter("isAnonymous", false);
+
+            var t = client.Execute(request);
+
+        }
+
     }
 }

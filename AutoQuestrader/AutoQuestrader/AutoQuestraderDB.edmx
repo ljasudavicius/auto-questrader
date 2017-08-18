@@ -31,7 +31,7 @@
             <PropertyRef Name="SymbolName" />
           </Key>
           <Property Name="SymbolName" Type="varchar" MaxLength="50" Nullable="false" />
-          <Property Name="TargetPercent" Type="float" />
+          <Property Name="TargetPercent" Type="float" Nullable="false" />
           <Property Name="CategoryName" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="ShouldBuy" Type="bit" Nullable="false" />
           <Property Name="ShouldSell" Type="bit" Nullable="false" />
@@ -134,7 +134,7 @@
             <PropertyRef Name="SymbolName" />
           </Key>
           <Property Name="SymbolName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="TargetPercent" Type="Double" />
+          <Property Name="TargetPercent" Type="Double" Nullable="false" />
           <Property Name="CategoryName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="ShouldBuy" Type="Boolean" Nullable="false" />
           <Property Name="ShouldSell" Type="Boolean" Nullable="false" />
@@ -175,7 +175,7 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-      </Schema>
+        </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
