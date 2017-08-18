@@ -11,13 +11,20 @@
           </Key>
           <Property Name="OperationKey" Type="uniqueidentifier" Nullable="false" />
         </EntityType>
+        <EntityType Name="AccountCategory">
+          <Key>
+            <PropertyRef Name="AccountNumber" />
+            <PropertyRef Name="CategoryName" />
+          </Key>
+          <Property Name="AccountNumber" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="CategoryName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Percent" Type="float" Nullable="false" />
+        </EntityType>
         <EntityType Name="Category">
           <Key>
             <PropertyRef Name="Name" />
           </Key>
           <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
-          <Property Name="TargetPercent" Type="float" Nullable="false" />
-          <Property Name="AccountNumber" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="StockTarget">
           <Key>
@@ -40,6 +47,18 @@
           <Property Name="ApiServer" Type="varchar" MaxLength="100" />
           <Property Name="ExpiresIn" Type="int" />
         </EntityType>
+        <Association Name="FK_AccountCategory_Category">
+          <End Role="Category" Type="Self.Category" Multiplicity="1" />
+          <End Role="AccountCategory" Type="Self.AccountCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Category">
+              <PropertyRef Name="Name" />
+            </Principal>
+            <Dependent Role="AccountCategory">
+              <PropertyRef Name="CategoryName" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_StockTarget_Category">
           <End Role="Category" Type="Self.Category" Multiplicity="1" />
           <End Role="StockTarget" Type="Self.StockTarget" Multiplicity="*" />
@@ -54,9 +73,14 @@
         </Association>
         <EntityContainer Name="AutoQuestraderModelStoreContainer">
           <EntitySet Name="__RefactorLog" EntityType="Self.__RefactorLog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="AccountCategory" EntityType="Self.AccountCategory" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Category" EntityType="Self.Category" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockTarget" EntityType="Self.StockTarget" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Token" EntityType="Self.Token" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_AccountCategory_Category" Association="Self.FK_AccountCategory_Category">
+            <End Role="Category" EntitySet="Category" />
+            <End Role="AccountCategory" EntitySet="AccountCategory" />
+          </AssociationSet>
           <AssociationSet Name="FK_StockTarget_Category" Association="Self.FK_StockTarget_Category">
             <End Role="Category" EntitySet="Category" />
             <End Role="StockTarget" EntitySet="StockTarget" />
@@ -68,9 +92,14 @@
       <Schema Namespace="AutoQuestraderModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityContainer Name="AutoQuestraderEntities" annotation:LazyLoadingEnabled="true" >
           <EntitySet Name="C__RefactorLog" EntityType="AutoQuestraderModel.C__RefactorLog" />
+          <EntitySet Name="AccountCategories" EntityType="AutoQuestraderModel.AccountCategory" />
           <EntitySet Name="Categories" EntityType="AutoQuestraderModel.Category" />
           <EntitySet Name="StockTargets" EntityType="AutoQuestraderModel.StockTarget" />
           <EntitySet Name="Tokens" EntityType="AutoQuestraderModel.Token" />
+          <AssociationSet Name="FK_AccountCategory_Category" Association="AutoQuestraderModel.FK_AccountCategory_Category">
+            <End Role="Category" EntitySet="Categories" />
+            <End Role="AccountCategory" EntitySet="AccountCategories" />
+          </AssociationSet>
           <AssociationSet Name="FK_StockTarget_Category" Association="AutoQuestraderModel.FK_StockTarget_Category">
             <End Role="Category" EntitySet="Categories" />
             <End Role="StockTarget" EntitySet="StockTargets" />
@@ -82,13 +111,22 @@
           </Key>
           <Property Name="OperationKey" Type="Guid" Nullable="false" />
         </EntityType>
+        <EntityType Name="AccountCategory">
+          <Key>
+            <PropertyRef Name="AccountNumber" />
+            <PropertyRef Name="CategoryName" />
+          </Key>
+          <Property Name="AccountNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="CategoryName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Percent" Type="Double" Nullable="false" />
+          <NavigationProperty Name="Category" Relationship="AutoQuestraderModel.FK_AccountCategory_Category" FromRole="AccountCategory" ToRole="Category" />
+        </EntityType>
         <EntityType Name="Category">
           <Key>
             <PropertyRef Name="Name" />
           </Key>
           <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="TargetPercent" Type="Double" Nullable="false" />
-          <Property Name="AccountNumber" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="AccountCategories" Relationship="AutoQuestraderModel.FK_AccountCategory_Category" FromRole="Category" ToRole="AccountCategory" />
           <NavigationProperty Name="StockTargets" Relationship="AutoQuestraderModel.FK_StockTarget_Category" FromRole="Category" ToRole="StockTarget" />
         </EntityType>
         <EntityType Name="StockTarget">
@@ -113,6 +151,18 @@
           <Property Name="ApiServer" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
           <Property Name="ExpiresIn" Type="Int32" />
         </EntityType>
+        <Association Name="FK_AccountCategory_Category">
+          <End Type="AutoQuestraderModel.Category" Role="Category" Multiplicity="1" />
+          <End Type="AutoQuestraderModel.AccountCategory" Role="AccountCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Category">
+              <PropertyRef Name="Name" />
+            </Principal>
+            <Dependent Role="AccountCategory">
+              <PropertyRef Name="CategoryName" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_StockTarget_Category">
           <End Type="AutoQuestraderModel.Category" Role="Category" Multiplicity="1" />
           <End Type="AutoQuestraderModel.StockTarget" Role="StockTarget" Multiplicity="*" />
@@ -138,11 +188,18 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <EntitySetMapping Name="AccountCategories">
+            <EntityTypeMapping TypeName="AutoQuestraderModel.AccountCategory">
+              <MappingFragment StoreEntitySet="AccountCategory">
+                <ScalarProperty Name="Percent" ColumnName="Percent" />
+                <ScalarProperty Name="CategoryName" ColumnName="CategoryName" />
+                <ScalarProperty Name="AccountNumber" ColumnName="AccountNumber" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
           <EntitySetMapping Name="Categories">
             <EntityTypeMapping TypeName="AutoQuestraderModel.Category">
               <MappingFragment StoreEntitySet="Category">
-                <ScalarProperty Name="AccountNumber" ColumnName="AccountNumber" />
-                <ScalarProperty Name="TargetPercent" ColumnName="TargetPercent" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
             </EntityTypeMapping>

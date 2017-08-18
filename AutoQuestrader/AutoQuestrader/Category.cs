@@ -17,13 +17,14 @@ namespace AutoQuestrader
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Category()
         {
+            this.AccountCategories = new HashSet<AccountCategory>();
             this.StockTargets = new HashSet<StockTarget>();
         }
     
         public string Name { get; set; }
-        public double TargetPercent { get; set; }
-        public string AccountNumber { get; set; }
     
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<AccountCategory> AccountCategories { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockTarget> StockTargets { get; set; }
     }

@@ -62,12 +62,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccountCategory.cs">
+      <DependentUpon>AutoQuestraderDB.tt</DependentUpon>
+    </Compile>
     <Compile Include="apiModels\Account.cs" />
     <Compile Include="apiModels\AuthTokenResponse.cs" />
     <Compile Include="apiModels\Balance.cs" />
     <Compile Include="apiModels\BalancesResponse.cs" />
     <Compile Include="apiModels\Position.cs" />
     <Compile Include="apiModels\PositionsResponse.cs" />
+    <Compile Include="apiModels\Quote.cs" />
+    <Compile Include="apiModels\QuotesResponse.cs" />
+    <Compile Include="apiModels\Symbol.cs" />
+    <Compile Include="apiModels\SymbolsResponse.cs" />
     <Compile Include="apiModels\User.cs" />
     <Compile Include="AuthHelper.cs" />
     <Compile Include="AutoQuestraderDB.Context.cs">

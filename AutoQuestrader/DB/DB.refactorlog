@@ -77,4 +77,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="ApiServer" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="31257375-4dae-4f13-ad59-de173f6b3780" ChangeDateTime="08/17/2017 22:01:51">
+    <Property Name="ElementName" Value="[dbo].[AccountCategory].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[AccountCategory]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="AccountNumber" />
+  </Operation>
 </Operations>
