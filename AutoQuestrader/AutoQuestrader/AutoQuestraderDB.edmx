@@ -46,6 +46,7 @@
           <Property Name="TokenType" Type="varchar" MaxLength="100" />
           <Property Name="ApiServer" Type="varchar" MaxLength="100" />
           <Property Name="ExpiresIn" Type="int" />
+          <Property Name="ExpiresDate" Type="datetimeoffset" Precision="7" />
         </EntityType>
         <Association Name="FK_AccountCategory_Category">
           <End Role="Category" Type="Self.Category" Multiplicity="1" />
@@ -150,6 +151,7 @@
           <Property Name="TokenType" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
           <Property Name="ApiServer" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
           <Property Name="ExpiresIn" Type="Int32" />
+          <Property Name="ExpiresDate" Type="DateTimeOffset" Precision="7" />
         </EntityType>
         <Association Name="FK_AccountCategory_Category">
           <End Type="AutoQuestraderModel.Category" Role="Category" Multiplicity="1" />
@@ -218,6 +220,7 @@
           <EntitySetMapping Name="Tokens">
             <EntityTypeMapping TypeName="AutoQuestraderModel.Token">
               <MappingFragment StoreEntitySet="Token">
+                <ScalarProperty Name="ExpiresDate" ColumnName="ExpiresDate" />
                 <ScalarProperty Name="ExpiresIn" ColumnName="ExpiresIn" />
                 <ScalarProperty Name="ApiServer" ColumnName="ApiServer" />
                 <ScalarProperty Name="TokenType" ColumnName="TokenType" />

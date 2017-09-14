@@ -100,45 +100,27 @@ namespace AutoQuestrader
         public static void CreateMarketBuyOrder(string accountNumber, int symbolId, int quantity)
         {
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            request.AddHeader("Accept", "application/json");
             request.AddUrlSegment("accountNumber", accountNumber);
 
+            var body = new
+            {
+                accountNumber = accountNumber,
+                symbolId = symbolId,
+                quantity = quantity,
+                icebergQuantity = 1,
+                isAllOrNone = false,
+                isAnonymous = false,
+                orderType = "Market",
+                timeInForce = "GoodTillCanceled",
+                action = "Buy",
+                primaryRoute = "AUTO",
+                secondaryRoute = "AUTO"
+            };
 
-            //    var body = new {
-            //        accountNumber = accountNumber,
-            //        symbolId= symbolId,
-            //        quantity= quantity,
-            //        icebergQuantity= 1,
-            //        limitPrice= 537,
-            //        isAllOrNone= true,
-            //        isAnonymous= false,
-            //        orderType= "Limit",
-            //        timeInForce= "GoodTillCanceled",
-            //        action= "Buy",
-            //        primaryRoute= "AUTO",
-            //        secondaryRoute= "AUTO"
-            //    };
-
-            //request.AddParameter("text/json", body, ParameterType.RequestBody);
-
-            request.AddParameter("symbolId", symbolId);
-            request.AddParameter("quantity", quantity);
-            request.AddParameter("orderType", "Market");
-            request.AddParameter("action", "Buy");
-            request.AddParameter("primaryRoute", "AUTO");
-            request.AddParameter("secondaryRoute", "AUTO");
-            request.AddParameter("timeInForce", "ImmediateOrCancel");
-
-            request.AddParameter("icebergQuantity", 1);
-            request.AddParameter("limitPrice", 0);
-            request.AddParameter("stopPrice", 0);
-            request.AddParameter("isAllOrNone", false);
-            request.AddParameter("isAnonymous", false);
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(body);
 
             var t = client.Execute(request);
-
         }
 
     }

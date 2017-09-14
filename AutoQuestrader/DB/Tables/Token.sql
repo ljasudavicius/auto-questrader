@@ -6,5 +6,6 @@
     [TokenType] VARCHAR(100) NULL, 
     [ApiServer] VARCHAR(100) NULL, 
     [ExpiresIn] INT NULL, 
+    [ExpiresDate] DATETIMEOFFSET NULL, 
     PRIMARY KEY ([LoginServer])
 )

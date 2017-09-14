@@ -10,13 +10,52 @@ namespace AutoQuestrader
 {
     public static class AuthHelper
     {
-        public static Token RefreshToken(AutoQuestraderEntities db, bool live) {
+        private static string liveServer = "https://login.questrade.com";
+        private static string practiceServer = "https://practicelogin.questrade.com";
 
-            var loginServer = live ? "https://login.questrade.com" : "https://practicelogin.questrade.com";
+        public static Token RefreshToken(AutoQuestraderEntities db, bool live)
+        {
+            var loginServer = live ? liveServer : practiceServer;
 
             var curToken = db.Tokens.FirstOrDefault(p => p.LoginServer == loginServer);
 
-            if (curToken != null)
+            if (curToken == null) {
+                curToken = new Token();
+                curToken.LoginServer = loginServer;
+                curToken.ExpiresDate = DateTimeOffset.MinValue;
+                db.Tokens.Add(curToken);
+            }
+
+            if (curToken.ExpiresDate <= DateTimeOffset.UtcNow) 
+            {
+                return RefreshToken(db, curToken);
+            }
+            else {
+                return curToken;
+            }         
+        }
+
+        private static Token PromptForNewRefreshToken(Token curToken) {
+            Console.WriteLine("Please enter a valid token for: " + curToken.LoginServer);
+
+            var input = Console.ReadLine();
+
+            if (String.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Press enter to close...");
+                Console.ReadLine();
+                Environment.Exit(0);
+            }
+            else
+            {
+                curToken.RefreshToken = input;
+            }
+
+            return curToken;
+        }
+
+        public static Token RefreshToken(AutoQuestraderEntities db, Token curToken) {
+            try
             {
                 var authClient = new RestClient(curToken.LoginServer);
 
@@ -29,15 +68,16 @@ namespace AutoQuestrader
                 curToken.ApiServer = responseToken.Data.api_server;
                 curToken.AccessToken = responseToken.Data.access_token;
                 curToken.ExpiresIn = responseToken.Data.expires_in;
+                curToken.ExpiresDate = DateTimeOffset.UtcNow.AddSeconds(responseToken.Data.expires_in - 30); // create a 30 second buffer to account for network slowness
                 curToken.RefreshToken = responseToken.Data.refresh_token;
                 curToken.TokenType = responseToken.Data.token_type;
 
                 db.SaveChanges();
 
-               return curToken;
+                return curToken;
             }
-            else {
-                throw new Exception("No token found in DB for that login server.");
+            catch {
+                return RefreshToken(db, PromptForNewRefreshToken(curToken));
             }
         }
     }

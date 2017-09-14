@@ -20,5 +20,6 @@ namespace AutoQuestrader
         public string TokenType { get; set; }
         public string ApiServer { get; set; }
         public Nullable<int> ExpiresIn { get; set; }
+        public Nullable<System.DateTimeOffset> ExpiresDate { get; set; }
     }
 }
