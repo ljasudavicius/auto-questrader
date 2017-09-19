@@ -1,4 +1,5 @@
 ﻿using AutoQuestrader.apiModels;
+using AutoQuestrader.Models;
 using RestSharp;
 using RestSharp.Authenticators;
 using System;
@@ -13,59 +14,86 @@ namespace AutoQuestrader
 {
     class Program
     {
-        public static RestRequest symbolsRequest { get { return new RestRequest("/v1/symbols/", Method.GET); } }
-
+        public static AutoQuestraderEntities db;
         public static RestClient client;
+        public static User curUser;
 
         static void Main(string[] args)
         {
-            var db = new AutoQuestraderEntities();
+            db = new AutoQuestraderEntities();
 
             var token = AuthHelper.RefreshToken(db, false);
 
             client = new RestClient(token.ApiServer);
             client.AddDefaultHeader("Authorization", token.TokenType + " " + token.AccessToken);
          
-            User responseUser = client.Execute<User>(new RestRequest("v1/accounts", Method.GET)).Data;
+            curUser = client.Execute<User>(new RestRequest("v1/accounts", Method.GET)).Data;
 
-            foreach (var curAccount in responseUser.accounts)
+            var pendingOrders = GetPendingOrders();
+
+            var ngRequirment = GetNorbertsGambitRequirement(pendingOrders);
+        }
+
+        public static PendingOrder GetNorbertsGambitRequirement(List<PendingOrder> pendingOrders)
+        {
+            var accountGroups = pendingOrders.GroupBy(p => p.AccountNumber);
+
+
+
+            return new PendingOrder();
+        }
+
+        public static List<PendingOrder> GetPendingOrders() {
+            var pendingOrders = new List<PendingOrder>();
+
+            foreach (var curAccount in curUser.accounts)
             {
                 PositionsResponse positions = GetPositions(curAccount.number);
-
                 BalancesResponse balances = GetBalances(curAccount.number);
+
                 var totalEquityInCAD = balances.combinedBalances.FirstOrDefault(p => p.currency == "CAD").totalEquity;
                 var totalEquityInUSD = balances.combinedBalances.FirstOrDefault(p => p.currency == "USD").totalEquity;
 
                 var accountCategories = db.AccountCategories.Where(p => p.AccountNumber == curAccount.number);
 
-                foreach (var curAccountCategory in accountCategories) {
-
+                foreach (var curAccountCategory in accountCategories)
+                {
                     foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
                     {
-
-                        var symbol = GetSymbol(curStockTarget.SymbolName);
+                        var symbol = GetSymbol(curStockTarget.Symbol);
                         var quote = GetQuote(symbol.symbolId);
 
-                        var curPosition = positions.positions.FirstOrDefault(p => p.symbol == curStockTarget.SymbolName);
+                        var curPosition = positions.positions.FirstOrDefault(p => p.symbol == curStockTarget.Symbol);
 
-                        double currentPercent = 0;
                         double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
-                        if (curPosition != null) {
-                            currentPercent = (curPosition.currentMarketValue / totalEquity)*100;
-                        }
+                        double currentPercentOwned = curPosition != null ? (curPosition.currentMarketValue / totalEquity) * 100 : 0;
+                      
+                        double accountTargetPercent = ((curAccountCategory.Percent / 100) * (curStockTarget.TargetPercent / 100)) * 100;
+                        double percentOfTarget = (currentPercentOwned / accountTargetPercent) * 100;
 
-                        double percentOfTarget = (currentPercent / curStockTarget.TargetPercent)*100;
-
-                        if (percentOfTarget < 90) {
-
-                            var valueToBuy = ((curStockTarget.TargetPercent - currentPercent)/100) * totalEquity;
+                        if (percentOfTarget < 95)
+                        {
+                            var valueToBuy = ((accountTargetPercent - currentPercentOwned) / 100) * totalEquity;
                             int numSharesToBuy = (int)Math.Floor(valueToBuy / quote.askPrice);
 
-                            CreateMarketBuyOrder(curAccount.number, symbol.symbolId, numSharesToBuy);
+                            if (numSharesToBuy > 0)
+                            {
+                                pendingOrders.Add(new PendingOrder()
+                                {
+                                    AccountNumber = curAccount.number,
+                                    Symbol = symbol,
+                                    Quote = quote,
+                                    IsBuyOrder = true,
+                                    Value = valueToBuy,
+                                    Quantity = numSharesToBuy
+                                });
+                            }
                         }
                     }
                 }
             }
+
+            return pendingOrders;
         }
 
         public static PositionsResponse GetPositions(string accountNumber) {
@@ -97,7 +125,12 @@ namespace AutoQuestrader
             return client.Execute<QuotesResponse>(request).Data.quotes.FirstOrDefault();
         }
 
-        public static void CreateMarketBuyOrder(string accountNumber, int symbolId, int quantity)
+        public static void CreateMarketOrder(PendingOrder curPendingOrder)
+        {
+            CreateMarketOrder(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
+        }
+
+        public static void CreateMarketOrder(string accountNumber, int symbolId, bool isBuyOrder, int quantity)
         {
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
             request.AddUrlSegment("accountNumber", accountNumber);
@@ -112,7 +145,7 @@ namespace AutoQuestrader
                 isAnonymous = false,
                 orderType = "Market",
                 timeInForce = "GoodTillCanceled",
-                action = "Buy",
+                action = isBuyOrder ? "Buy" : "Sell",
                 primaryRoute = "AUTO",
                 secondaryRoute = "AUTO"
             };
@@ -120,7 +153,13 @@ namespace AutoQuestrader
             request.RequestFormat = DataFormat.Json;
             request.AddBody(body);
 
-            var t = client.Execute(request);
+            client.Execute(request);
+
+            Console.WriteLine("-- New Order Placed --");
+            Console.WriteLine("Action: "+ body.action);
+            Console.WriteLine("Symbol: "+ symbolId);
+            Console.WriteLine("Quantity: " + quantity);
+            Console.WriteLine("");
         }
 
     }

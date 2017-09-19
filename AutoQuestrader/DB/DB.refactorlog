@@ -84,4 +84,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="AccountNumber" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="e64bb063-9e95-417f-b67b-054b1b0d8bb9" ChangeDateTime="09/19/2017 20:32:00">
+    <Property Name="ElementName" Value="[dbo].[StockTarget].[SymbolName]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[StockTarget]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="Symbol" />
+  </Operation>
 </Operations>

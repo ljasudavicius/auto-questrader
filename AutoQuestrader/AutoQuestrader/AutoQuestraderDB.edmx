@@ -28,9 +28,9 @@
         </EntityType>
         <EntityType Name="StockTarget">
           <Key>
-            <PropertyRef Name="SymbolName" />
+            <PropertyRef Name="Symbol" />
           </Key>
-          <Property Name="SymbolName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Symbol" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="TargetPercent" Type="float" Nullable="false" />
           <Property Name="CategoryName" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="ShouldBuy" Type="bit" Nullable="false" />
@@ -132,9 +132,9 @@
         </EntityType>
         <EntityType Name="StockTarget">
           <Key>
-            <PropertyRef Name="SymbolName" />
+            <PropertyRef Name="Symbol" />
           </Key>
-          <Property Name="SymbolName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Symbol" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="TargetPercent" Type="Double" Nullable="false" />
           <Property Name="CategoryName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="ShouldBuy" Type="Boolean" Nullable="false" />
@@ -213,7 +213,7 @@
                 <ScalarProperty Name="ShouldBuy" ColumnName="ShouldBuy" />
                 <ScalarProperty Name="CategoryName" ColumnName="CategoryName" />
                 <ScalarProperty Name="TargetPercent" ColumnName="TargetPercent" />
-                <ScalarProperty Name="SymbolName" ColumnName="SymbolName" />
+                <ScalarProperty Name="Symbol" ColumnName="Symbol" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

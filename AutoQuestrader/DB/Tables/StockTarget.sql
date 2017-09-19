@@ -1,10 +1,10 @@
 ﻿CREATE TABLE [dbo].[StockTarget]
 (
-    [SymbolName] VARCHAR(50) NOT NULL, 
+    [Symbol] VARCHAR(50) NOT NULL, 
     [TargetPercent] FLOAT NOT NULL, 
     [CategoryName] VARCHAR(50) NOT NULL, 
     [ShouldBuy] BIT NOT NULL, 
     [ShouldSell] BIT NOT NULL, 
     CONSTRAINT [FK_StockTarget_Category] FOREIGN KEY ([CategoryName]) REFERENCES [Category]([Name]), 
-    CONSTRAINT [PK_StockTarget] PRIMARY KEY ([SymbolName])
+    CONSTRAINT [PK_StockTarget] PRIMARY KEY ([Symbol])
 )
