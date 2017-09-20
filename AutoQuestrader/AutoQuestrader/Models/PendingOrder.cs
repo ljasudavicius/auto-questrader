@@ -15,5 +15,7 @@ namespace AutoQuestrader.Models
         public bool IsBuyOrder { get; set; }
         public double Value { get; set; }
         public int Quantity { get; set; }
+        public double TargetPercent { get; set; }
+        public double OwnedPercent { get; set; }
     }
 }
