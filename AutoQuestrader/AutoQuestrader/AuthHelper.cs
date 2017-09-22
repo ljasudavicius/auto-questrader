@@ -13,7 +13,7 @@ namespace AutoQuestrader
         private static string liveServer = "https://login.questrade.com";
         private static string practiceServer = "https://practicelogin.questrade.com";
 
-        public static Token RefreshToken(AutoQuestraderEntities db, bool live)
+        public static Token RefreshToken(AutoQuestraderEntities db, bool live, bool forceRefresh = false)
         {
             var loginServer = live ? liveServer : practiceServer;
 
@@ -26,7 +26,7 @@ namespace AutoQuestrader
                 db.Tokens.Add(curToken);
             }
 
-            if (curToken.ExpiresDate <= DateTimeOffset.UtcNow) 
+            if (curToken.ExpiresDate <= DateTimeOffset.UtcNow || forceRefresh) 
             {
                 return RefreshToken(db, curToken);
             }

@@ -52,7 +52,7 @@ namespace AutoQuestrader
             }
         }
 
-        public static void SendNorbertGambitEmail(MailAddress fromAddress, string fromPassword, string accountNumber, int quantity)
+        public static void SendNorbertGambitEmail(string accountNumber, int quantity)
         {
             string NGSubject = "Journal DLR.TO to DLR-U.TO";
             string NGBody = "Hello,\r\n\r\n" +
@@ -60,7 +60,7 @@ namespace AutoQuestrader
                "When available, could you please journal " + quantity + " shares of DLR.TO to DLR-U.TO on Account# " + accountNumber + "\r\n" +
                "I am aware of the processing times involved and am ok with it.\r\n\r\n" +
                "Thank you,\r\n" +
-               "Luke Jasudavicius";
+               USER_EMAIL.DisplayName;
 
             SendEmail(NGSubject, NGBody, new MailAddress("support@questrade.com", "Questrade Support"));
         }
