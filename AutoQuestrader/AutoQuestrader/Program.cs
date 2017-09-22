@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,9 +36,14 @@ namespace AutoQuestrader
          
             curUser = client.Execute<User>(new RestRequest("v1/accounts", Method.GET)).Data;
 
+            //EmailHelper.SendNorbertGambitEmail(USER_EMAIL, UserEmailPassword,"123456",7890);
+            
             //SellAllSecuritiesInAllAccounts(); 
 
             var pendingOrders = GetPendingOrders();
+
+            var totalUSDValue = pendingOrders.Where(p => p.Symbol.currency == CURRENCY_USD).Sum(p => p.Value);
+            var totalCADValue = pendingOrders.Where(p => p.Symbol.currency == CURRENCY_CAD).Sum(p => p.Value);
 
             var ngRequirments = GetNorbertsGambitRequirements(pendingOrders);
         }
@@ -53,7 +59,7 @@ namespace AutoQuestrader
         public static void SellAllSecuritiesInAccount(string accountNumber)
         {
             if (IS_LIVE) {
-                throw new Exception("Attempting to sell all on LIVE account!");
+                throw new Exception("Attempting to sell all securities on a LIVE account!");
             }
             else {
 
@@ -86,6 +92,10 @@ namespace AutoQuestrader
                     }
                 }
 
+                BalancesResponse balances = GetBalances(accountNumber);
+                var curBalanceUSD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD);
+
+
                 var NGSymbolUSD = GetSymbol(NG_SYMBOL_USD);
                 var NGQuoteUSD = GetQuote(NGSymbolUSD.symbolId);
 
@@ -96,11 +106,12 @@ namespace AutoQuestrader
                     CreateMarketOrder(accountNumber, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
                 }
 
-                BalancesResponse balances = GetBalances(accountNumber);
-                var curBalanceUSD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD);
-
                 var ngPositionCAD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_CAD);
-                var pendingNGValueUSD = ngPositionCAD.openQuantity * NGQuoteUSD.bidPrice;
+                var pendingNGValueUSD = 0.0;
+                if (ngPositionUSD != null)
+                {
+                    pendingNGValueUSD = ngPositionCAD.openQuantity * NGQuoteUSD.bidPrice;
+                }
 
                 var balanceUSDRequired = requiredUSD - (curBalanceUSD.cash + pendingNGValueUSD);
 
@@ -246,11 +257,11 @@ namespace AutoQuestrader
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                Console.WriteLine("-- New Order Placed --");
+                Console.WriteLine("-- Create Market Order Post --");
                 Console.WriteLine("Action: " + body.action);
                 Console.WriteLine("Symbol: " + symbolId);
                 Console.WriteLine("Quantity: " + quantity);
-                Console.WriteLine("Message: " + response.Content);
+                Console.WriteLine("Response: " + response.Content);
                 Console.WriteLine("");
             }
             else {
