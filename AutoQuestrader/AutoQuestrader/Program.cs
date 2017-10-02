@@ -15,7 +15,7 @@ namespace AutoQuestrader
 {
     class Program
     {
-        public static readonly bool IS_LIVE = true;
+        public static readonly bool IS_LIVE = false;
 
         public static AutoQuestraderEntities db;
         public static RestClient client;
@@ -129,8 +129,8 @@ namespace AutoQuestrader
                 PositionsResponse positions = GetPositions(curAccountNumber);
                 var ngPositionUSD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_USD);
 
-                if (ngPositionUSD != null) { // sell all NG stocks
-                    //CreateMarketOrder(curAccountNumber, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
+                if (ngPositionUSD != null && ngPositionUSD.openQuantity > 0) { // sell all NG stocks
+                    CreateMarketOrder(curAccountNumber, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
                 }
 
                 var ngPositionCAD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_CAD);
@@ -256,6 +256,39 @@ namespace AutoQuestrader
             return client.Execute<QuotesResponse>(request).Data.quotes.FirstOrDefault();
         }
 
+        public static void GetMarketOrderImpact(PendingOrder curPendingOrder)
+        {
+            GetMarketOrderImpact(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
+        }
+
+        public static void GetMarketOrderImpact(string accountNumber, int symbolId, bool isBuyOrder, int quantity)
+        {
+            var request = new RestRequest("/v1/accounts/{accountNumber}/orders/impact", Method.POST);
+            request.AddUrlSegment("accountNumber", accountNumber);
+
+            var body = new
+            {
+                accountNumber = accountNumber,
+                symbolId = symbolId,
+                quantity = quantity,
+                icebergQuantity = 1,
+                isAllOrNone = false,
+                isAnonymous = false,
+                orderType = "Market",
+                timeInForce = "GoodTillCanceled",
+                action = isBuyOrder ? "Buy" : "Sell",
+                primaryRoute = "AUTO",
+                secondaryRoute = "AUTO"
+            };
+
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(body);
+
+            var response = client.Execute<OrderImpactResponse>(request);
+
+
+        }
+
         public static void CreateMarketOrder(PendingOrder curPendingOrder)
         {
             CreateMarketOrder(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
@@ -263,6 +296,11 @@ namespace AutoQuestrader
 
         public static void CreateMarketOrder(string accountNumber, int symbolId, bool isBuyOrder, int quantity)
         {
+            if (IS_LIVE)
+            {
+                throw new Exception("Attempting to create market order on LIVE account!");
+            }
+
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
             request.AddUrlSegment("accountNumber", accountNumber);
 

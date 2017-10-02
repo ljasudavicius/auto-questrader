@@ -69,6 +69,7 @@
     <Compile Include="apiModels\AuthTokenResponse.cs" />
     <Compile Include="apiModels\Balance.cs" />
     <Compile Include="apiModels\BalancesResponse.cs" />
+    <Compile Include="apiModels\OrderImpactResponse.cs" />
     <Compile Include="apiModels\Position.cs" />
     <Compile Include="apiModels\PositionsResponse.cs" />
     <Compile Include="apiModels\Quote.cs" />
