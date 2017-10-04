@@ -24,13 +24,13 @@ namespace AutoQuestrader
         public static readonly string NG_SYMBOL_USD = "DLR.U.TO";
         public static readonly string CURRENCY_USD = "USD";
         public static readonly string CURRENCY_CAD = "CAD";
-        public static readonly double UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.05; // 5%
+        public static readonly double UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.01; // 1%
         public static readonly double UNACCEPTABLE_NG_THRESHOLD = 500; 
 
         static void Main(string[] args)
         {
             Console.WriteLine("Hi, welcome to AutoQuestrader.");
-            Console.WriteLine("Calculating...");
+            Console.WriteLine("\nCalculating...");
 
             db = new AutoQuestraderEntities();
 
@@ -44,8 +44,7 @@ namespace AutoQuestrader
 
 
             var pendingOrders = GetPendingOrdersForAllAccounts();
-            Console.WriteLine("");
-            Console.WriteLine("-- Pending Orders --");
+            Console.WriteLine("\n-- Pending Orders --");
             OutputPendingOrdersTable(pendingOrders);
 
         
@@ -54,7 +53,15 @@ namespace AutoQuestrader
            
             HandlePurchasingOfPendingOrders(pendingOrders);
 
-            Console.WriteLine("Program Complete. Press enter to close...");
+            Console.WriteLine("\nPurchasing Complete.");
+            foreach (var curAccount in curUser.accounts) {
+                Console.WriteLine("\nAccount number: "+ curAccount.number);
+                BalancesResponse balances = GetBalances(curAccount.number);
+                Console.WriteLine("CAD Cash: " + balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_CAD).cash);
+                Console.WriteLine("USD Cash: " + balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD).cash);
+            }
+
+            Console.WriteLine("\n\nPress enter to close...");
             Console.ReadLine();
         }
 
@@ -64,7 +71,7 @@ namespace AutoQuestrader
             {
                 Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
 
-                if (curNgRequirement.Value < UNACCEPTABLE_NG_THRESHOLD) {
+                if (curNgRequirement.TargetValue < UNACCEPTABLE_NG_THRESHOLD) {
                     Console.WriteLine("Current conversion amount is below acceptable threshold of: "+ UNACCEPTABLE_NG_THRESHOLD);
                     Console.WriteLine("Skipping conversion.");
                     continue;
@@ -79,7 +86,7 @@ namespace AutoQuestrader
                     continue;
                 }
 
-                Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.Value, 2) + " in " + NG_SYMBOL_CAD);
+                Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.TargetValue, 2) + " in " + NG_SYMBOL_CAD);
                 CreateMarketOrder(curNgRequirement);
                 EmailHelper.SendNorbertsGambitEmail(curNgRequirement.AccountNumber, curNgRequirement.Quantity);
             }
@@ -101,8 +108,11 @@ namespace AutoQuestrader
         }
 
         public static void HandlePurchaseOfPendingOrder(PendingOrder pendingOrder) {
+            Console.WriteLine("\nAttempting to purchase: " + pendingOrder.Symbol.symbol);
+
             var orderImpact = GetMarketOrderImpact(pendingOrder);
-            BalancesResponse balances = GetBalances(pendingOrder.AccountNumber);
+            Console.WriteLine("Trade value calculation: " + orderImpact.tradeValueCalculation);
+            Console.WriteLine("Commission: " + orderImpact.estimatedCommissions);
 
             if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
             {
@@ -111,9 +121,11 @@ namespace AutoQuestrader
                 return;
             }
 
-            if (balances.perCurrencyBalances.FirstOrDefault(p => p.currency == pendingOrder.Symbol.currency).cash < Math.Abs(orderImpact.buyingPowerEffect))
+            BalancesResponse balances = GetBalances(pendingOrder.AccountNumber);
+            var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == pendingOrder.Symbol.currency).cash;
+            if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
             {
-                Console.WriteLine("Order exceeds current cash level.");
+                Console.WriteLine("Order of "+ Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: "+ cashLevel);
                 Console.WriteLine("Attempt to reduce quantity purchased.");
 
                 pendingOrder.Quantity -= 1;
@@ -127,7 +139,9 @@ namespace AutoQuestrader
                 HandlePurchaseOfPendingOrder(pendingOrder);
             }
 
-            CreateMarketOrder(pendingOrder);
+            Console.WriteLine("|| CREATEMAKERTORDER||");
+            //CreateMarketOrder(pendingOrder);
+
         }
 
         public static void OutputPendingOrdersTable(List<PendingOrder> pendingOrders) {
@@ -139,26 +153,25 @@ namespace AutoQuestrader
                 var curAccountNumber = curPendingOrderGroup.Key;
                 Console.WriteLine("Account Number: "+ curAccountNumber);
                 Console.WriteLine("");
-                Console.WriteLine(String.Format("{0,11}{1,7}{2,12}{3,6}{4,10}{5,9}", "Symbol", "Qtty.", "Value", "Cur.", "Target %", "Owned %"));
+                Console.WriteLine(String.Format("{0,11}{1,7}{2,13}{3,6}{4,10}{5,9}", "Symbol", "Qtty.", "Tgt.Val.", "Cur.", "Target %", "Owned %"));
                 Console.WriteLine("--------------------------------------------------------");
 
                 foreach (var curPendingOrder in curPendingOrderGroup)
                 {
-                    Console.WriteLine(String.Format("{0,11}{1,7}{2,12}{3,6}{4,10}{5,9}", 
+                    Console.WriteLine(String.Format("{0,11}{1,7}{2,13}{3,6}{4,10}{5,9}", 
                         curPendingOrder.Symbol.symbol, 
                         curPendingOrder.Quantity, 
-                        Math.Round(curPendingOrder.Value, 2), 
+                        Math.Round(curPendingOrder.TargetValue, 2), 
                         curPendingOrder.Symbol.currency, 
                         Math.Round(curPendingOrder.TargetPercent, 2),
                         Math.Round(curPendingOrder.OwnedPercent, 2)
                     ));
                 }
-                Console.WriteLine("");
 
-                var totalPendingCADValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_CAD).Sum(p => p.Value);
-                Console.WriteLine("Total Pending CAD Value: " + Math.Round(totalPendingCADValue, 2));
+                var totalPendingCADValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_CAD).Sum(p => p.TargetValue);
+                Console.WriteLine("\nTotal Pending CAD Value: " + Math.Round(totalPendingCADValue, 2));
 
-                var totalPendingUSDValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_USD).Sum(p => p.Value);
+                var totalPendingUSDValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_USD).Sum(p => p.TargetValue);
                 Console.WriteLine("Total Pending USD Value: " + Math.Round(totalPendingUSDValue, 2));
                 Console.WriteLine("");
             }
@@ -226,7 +239,7 @@ namespace AutoQuestrader
                 {
                     if (curPendingOrder.Symbol.currency == CURRENCY_USD)
                     {
-                        requiredUSD += curPendingOrder.Value;
+                        requiredUSD += curPendingOrder.TargetValue;
                     }
                 }
 
@@ -257,7 +270,7 @@ namespace AutoQuestrader
                         Quote = NGQuoteCAD,
                         Quantity = numNGSharesNeeded,
                         IsBuyOrder = true,
-                        Value = numNGSharesNeeded * NGQuoteCAD.askPrice
+                        TargetValue = numNGSharesNeeded * NGQuoteCAD.askPrice
                     });
                 }
             }
@@ -310,7 +323,7 @@ namespace AutoQuestrader
                                 Symbol = symbol,
                                 Quote = quote,
                                 IsBuyOrder = true,
-                                Value = valueToBuy,
+                                TargetValue = valueToBuy,
                                 Quantity = numSharesToBuy,
                                 TargetPercent = accountTargetPercent,
                                 OwnedPercent = curPercentOwned,
@@ -397,7 +410,7 @@ namespace AutoQuestrader
 
             if (IS_LIVE)
             {
-                Console.WriteLine("-- Attempthing market order --");
+                Console.WriteLine("\n-- Attempthing market order --");
                 Console.WriteLine("Action: " + action);
                 Console.WriteLine("Symbol: " + symbolId);
                 Console.WriteLine("Value: " + orderImpact.tradeValueCalculation);

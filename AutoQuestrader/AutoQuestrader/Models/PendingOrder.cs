@@ -13,7 +13,7 @@ namespace AutoQuestrader.Models
         public Symbol Symbol { get; set; }
         public Quote Quote { get; set; }
         public bool IsBuyOrder { get; set; }
-        public double Value { get; set; }
+        public double TargetValue { get; set; }
         public int Quantity { get; set; }
         public double TargetPercent { get; set; }
         public double OwnedPercent { get; set; }
