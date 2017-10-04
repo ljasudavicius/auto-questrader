@@ -52,12 +52,12 @@ namespace AutoQuestrader
             }
         }
 
-        public static void SendNorbertGambitEmail(string accountNumber, int quantity)
+        public static void SendNorbertsGambitEmail(string accountNumber, int quantity)
         {
-            string NGSubject = "Journal DLR.TO to DLR-U.TO";
+            string NGSubject = "Journal " + Program.NG_SYMBOL_CAD + " to " + Program.NG_SYMBOL_USD;
             string NGBody = "Hello,\r\n\r\n" +
-               "I just purchased some shares of DLR.TO.\r\n" +
-               "When available, could you please journal " + quantity + " shares of DLR.TO to DLR-U.TO on Account# " + accountNumber + "\r\n" +
+               "I just purchased some shares of " + Program.NG_SYMBOL_CAD + ".\r\n" +
+               "When available, could you please journal " + quantity + " shares of " + Program.NG_SYMBOL_CAD + " to " + Program.NG_SYMBOL_USD + " on Account# " + accountNumber + "\r\n" +
                "I am aware of the processing times involved and am ok with it.\r\n\r\n" +
                "Thank you,\r\n" +
                USER_EMAIL.DisplayName;
