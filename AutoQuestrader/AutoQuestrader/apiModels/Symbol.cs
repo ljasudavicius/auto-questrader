@@ -23,5 +23,10 @@ namespace AutoQuestrader.apiModels
         public DateTime exDate { get; set; }
         public double marketCap { get; set; }
         public string currency { get; set; }
+        public string listingExchange { get; set; }
+        public string description { get; set; }
+        public string industrySector { get; set; }
+        public string industryGroup { get; set; }
+        public string industrySubGroup { get; set; }
     }
 }

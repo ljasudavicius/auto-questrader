@@ -87,8 +87,11 @@ namespace AutoQuestrader
                 }
 
                 Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.TargetValue, 2) + " in " + NG_SYMBOL_CAD);
-                CreateMarketOrder(curNgRequirement);
-                EmailHelper.SendNorbertsGambitEmail(curNgRequirement.AccountNumber, curNgRequirement.Quantity);
+                var success = CreateMarketOrder(curNgRequirement);
+                if (success)
+                {
+                    EmailHelper.SendNorbertsGambitEmail(curNgRequirement.AccountNumber, curNgRequirement.Quantity);
+                }
             }
         }
 
@@ -101,21 +104,22 @@ namespace AutoQuestrader
                 int i = random.Next(pendingOrders.Count);
                 var curPendingOrder = pendingOrders[i];
 
+                Console.WriteLine("\nAttempting to purchase: " + curPendingOrder.Symbol.symbol);
                 HandlePurchaseOfPendingOrder(curPendingOrder);
 
                 pendingOrders.Remove(curPendingOrder);
             } while (pendingOrders.Count() > 0);
         }
 
-        public static void HandlePurchaseOfPendingOrder(PendingOrder pendingOrder) {
-            Console.WriteLine("\nAttempting to purchase: " + pendingOrder.Symbol.symbol);
+        public static void HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool reducedQuantity = false ) {
 
             var orderImpact = GetMarketOrderImpact(pendingOrder);
-            Console.WriteLine("Trade value calculation: " + orderImpact.tradeValueCalculation);
-            Console.WriteLine("Commission: " + orderImpact.estimatedCommissions);
 
             if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
             {
+                Console.WriteLine("Trade value calculation: " + orderImpact.tradeValueCalculation);
+                Console.WriteLine("Commission: " + orderImpact.estimatedCommissions);
+
                 Console.WriteLine("Commissions greater than " + UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
                 Console.WriteLine("Skipping order.");
                 return;
@@ -125,8 +129,10 @@ namespace AutoQuestrader
             var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == pendingOrder.Symbol.currency).cash;
             if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
             {
-                Console.WriteLine("Order of "+ Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: "+ cashLevel);
-                Console.WriteLine("Attempt to reduce quantity purchased.");
+                if (!reducedQuantity) {
+                    Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
+                    Console.WriteLine("Attempt to reduce quantity purchased.");
+                }
 
                 pendingOrder.Quantity -= 1;
 
@@ -139,9 +145,8 @@ namespace AutoQuestrader
                 HandlePurchaseOfPendingOrder(pendingOrder);
             }
 
-            Console.WriteLine("|| CREATEMAKERTORDER||");
-            //CreateMarketOrder(pendingOrder);
-
+           // Console.WriteLine("|| CREATEMAKERTORDER||");
+            CreateMarketOrder(pendingOrder);
         }
 
         public static void OutputPendingOrdersTable(List<PendingOrder> pendingOrders) {
@@ -202,7 +207,7 @@ namespace AutoQuestrader
                 {
                     if (curPosition.openQuantity > 0)
                     {
-                        CreateMarketOrder(accountNumber, curPosition.symbolId, false, (int)curPosition.openQuantity);
+                        CreateMarketOrder(accountNumber, curPosition.symbol, curPosition.symbolId, false, (int)curPosition.openQuantity);
                     }
                 }
             }
@@ -214,7 +219,7 @@ namespace AutoQuestrader
 
             if (ngPositionUSD != null && ngPositionUSD.openQuantity > 0)
             { 
-                CreateMarketOrder(curAccountNumber, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
+                CreateMarketOrder(curAccountNumber, ngPositionUSD.symbol, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
             }
         }
 
@@ -398,12 +403,12 @@ namespace AutoQuestrader
             return response.Data;
         }
 
-        public static void CreateMarketOrder(PendingOrder curPendingOrder)
+        public static bool CreateMarketOrder(PendingOrder curPendingOrder)
         {
-            CreateMarketOrder(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
+            return CreateMarketOrder(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbol, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
         }
 
-        public static void CreateMarketOrder(string accountNumber, int symbolId, bool isBuyOrder, int quantity)
+        public static bool CreateMarketOrder(string accountNumber, string symbol ,int symbolId, bool isBuyOrder, int quantity)
         {
             var action = isBuyOrder ? "Buy" : "Sell";
             var orderImpact = GetMarketOrderImpact(accountNumber, symbolId, isBuyOrder, quantity);
@@ -411,18 +416,18 @@ namespace AutoQuestrader
             if (IS_LIVE)
             {
                 Console.WriteLine("\n-- Attempthing market order --");
+                Console.WriteLine("Symbol: " + symbol);
                 Console.WriteLine("Action: " + action);
-                Console.WriteLine("Symbol: " + symbolId);
                 Console.WriteLine("Value: " + orderImpact.tradeValueCalculation);
                 Console.WriteLine("Buying Power Result: " + orderImpact.buyingPowerResult);
                 Console.WriteLine("Estimated Commissions: " + orderImpact.estimatedCommissions);
-                Console.WriteLine("Allow? Y for yes, otherwise, program will close.");
+                Console.WriteLine("Allow? Y for yes");
                 var input = Console.ReadLine().Trim();
 
-                if (input != "y" || input != "Y")
+                if (input != "y" && input != "Y")
                 {
                     Console.WriteLine("Market order cancelled.");
-                    return;
+                    return false;
                 }
             }
 
@@ -442,14 +447,13 @@ namespace AutoQuestrader
                 accountNumber = accountNumber,
                 symbolId = symbolId,
                 quantity = quantity,
-                icebergQuantity = 1,
                 isAllOrNone = false,
                 isAnonymous = false,
                 orderType = "Market",
-                timeInForce = "GoodTillCanceled",
+                timeInForce = "Day",
                 action = action,
                 primaryRoute = "AUTO",
-                secondaryRoute = "AUTO"
+                secondaryRoute = "AUTO",
             };
 
             request.RequestFormat = DataFormat.Json;
@@ -461,10 +465,11 @@ namespace AutoQuestrader
             {
                 Console.WriteLine("-- Create Market Order Post --");
                 Console.WriteLine("Action: " + action);
-                Console.WriteLine("Symbol: " + symbolId);
+                Console.WriteLine("Symbol: " + symbol);
                 Console.WriteLine("Quantity: " + quantity);
                 Console.WriteLine("Response: " + response.Content);
                 Console.WriteLine("");
+                return true;
             }
             else {
                 throw new Exception("Create market order request failed.");
