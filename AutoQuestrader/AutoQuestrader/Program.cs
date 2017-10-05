@@ -25,7 +25,7 @@ namespace AutoQuestrader
         public static readonly string CURRENCY_USD = "USD";
         public static readonly string CURRENCY_CAD = "CAD";
         public static readonly double UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.01; // 1%
-        public static readonly double UNACCEPTABLE_NG_THRESHOLD = 500; 
+        public static readonly double UNACCEPTABLE_NG_THRESHOLD = 500;
 
         static void Main(string[] args)
         {
@@ -47,52 +47,80 @@ namespace AutoQuestrader
             Console.WriteLine("\n-- Pending Orders --");
             OutputPendingOrdersTable(pendingOrders);
 
-        
-            var ngRequirements = GetNorbertsGambitRequirements(pendingOrders);
-            HandleNorbertsGambitRequriements(ngRequirements);
-           
+
+            var ngRequirements = GetNorbertsGambitRequirements();
+            HandlePurchasingNorbertsGambitRequirements(ngRequirements);
+
+
             HandlePurchasingOfPendingOrders(pendingOrders);
 
             Console.WriteLine("\nPurchasing Complete.");
-            foreach (var curAccount in curUser.accounts) {
-                Console.WriteLine("\nAccount number: "+ curAccount.number);
+            foreach (var curAccount in curUser.accounts)
+            {
+                Console.WriteLine("\nAccount: " + curAccount.type);
+                Console.WriteLine("Account number: " + curAccount.number);
                 BalancesResponse balances = GetBalances(curAccount.number);
                 Console.WriteLine("CAD Cash: " + balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_CAD).cash);
                 Console.WriteLine("USD Cash: " + balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD).cash);
+                var breakdownPendingOrders = GetAccountBreakdown(curAccount.number);
+                Console.WriteLine("\n-- Account Breakdown --");
+                OutputPendingOrdersTable(breakdownPendingOrders);
             }
 
             Console.WriteLine("\n\nPress enter to close...");
             Console.ReadLine();
         }
 
-        public static void HandleNorbertsGambitRequriements(List<PendingOrder> ngRequirements)
+        public static void HandlePurchasingNorbertsGambitRequirements(List<PendingOrder> ngRequirements)
         {
             foreach (var curNgRequirement in ngRequirements)
             {
-                Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
-
-                if (curNgRequirement.TargetValue < UNACCEPTABLE_NG_THRESHOLD) {
-                    Console.WriteLine("Current conversion amount is below acceptable threshold of: "+ UNACCEPTABLE_NG_THRESHOLD);
-                    Console.WriteLine("Skipping conversion.");
-                    continue;
-                }
-
-                var orderImpact = GetMarketOrderImpact(curNgRequirement);
-                BalancesResponse balances = GetBalances(curNgRequirement.AccountNumber);
-
-                if (balances.perCurrencyBalances.FirstOrDefault(p => p.currency == curNgRequirement.Symbol.currency).cash < Math.Abs(orderImpact.buyingPowerEffect)) {
-                    Console.WriteLine("Order exceeds current cash level.");
-                    Console.WriteLine("Skipping conversion.");
-                    continue;
-                }
-
-                Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.TargetValue, 2) + " in " + NG_SYMBOL_CAD);
-                var success = CreateMarketOrder(curNgRequirement);
-                if (success)
-                {
-                    EmailHelper.SendNorbertsGambitEmail(curNgRequirement.AccountNumber, curNgRequirement.Quantity);
-                }
+                HandlePurchasingNorbertsGambitRequirement(curNgRequirement);
             }
+        }
+
+        public static void HandlePurchasingNorbertsGambitRequirement(PendingOrder curNgRequirement, bool reducedQuantity = false)
+        {
+            Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
+
+            if (curNgRequirement.TargetValue < UNACCEPTABLE_NG_THRESHOLD)
+            {
+                Console.WriteLine("Current conversion amount is below acceptable threshold of: " + UNACCEPTABLE_NG_THRESHOLD);
+                Console.WriteLine("Skipping conversion.");
+                return;
+            }
+
+            var orderImpact = GetMarketOrderImpact(curNgRequirement);
+            BalancesResponse balances = GetBalances(curNgRequirement.AccountNumber);
+
+            var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == curNgRequirement.Symbol.currency).cash;
+            if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
+            {
+                if (!reducedQuantity)
+                {
+                    Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
+                    Console.WriteLine("Attempting to reduce quantity purchased...");
+                }
+
+                curNgRequirement.Quantity -= 1;
+
+                if (curNgRequirement.Quantity <= 0)
+                {
+                    Console.WriteLine("Order quantity reduced to zero.");
+                    Console.WriteLine("Skipping order.");
+                    return;
+                }
+
+                HandlePurchasingNorbertsGambitRequirement(curNgRequirement, true);
+                return;
+            }
+
+            Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.TargetValue, 2) + " in " + NG_SYMBOL_CAD);
+            var success = CreateMarketOrder(curNgRequirement);
+            if (success)
+            {
+                EmailHelper.SendNorbertsGambitEmail(curNgRequirement.AccountNumber, curNgRequirement.Quantity);
+            }          
         }
 
         public static void HandlePurchasingOfPendingOrders(List<PendingOrder> pendingOrders)
@@ -111,8 +139,8 @@ namespace AutoQuestrader
             } while (pendingOrders.Count() > 0);
         }
 
-        public static void HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool reducedQuantity = false ) {
-
+        public static bool HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool reducedQuantity = false)
+        {
             var orderImpact = GetMarketOrderImpact(pendingOrder);
 
             if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
@@ -122,72 +150,76 @@ namespace AutoQuestrader
 
                 Console.WriteLine("Commissions greater than " + UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
                 Console.WriteLine("Skipping order.");
-                return;
+                return false;
             }
 
             BalancesResponse balances = GetBalances(pendingOrder.AccountNumber);
             var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == pendingOrder.Symbol.currency).cash;
             if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
             {
-                if (!reducedQuantity) {
+                if (!reducedQuantity)
+                {
                     Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
-                    Console.WriteLine("Attempt to reduce quantity purchased.");
+                    Console.WriteLine("Attempting to reduce quantity purchased...");
                 }
 
                 pendingOrder.Quantity -= 1;
 
-                if (pendingOrder.Quantity <= 0) {
+                if (pendingOrder.Quantity <= 0)
+                {
                     Console.WriteLine("Order quantity reduced to zero.");
                     Console.WriteLine("Skipping order.");
-                    return;
+                    return false;
                 }
 
-                HandlePurchaseOfPendingOrder(pendingOrder);
+                return HandlePurchaseOfPendingOrder(pendingOrder, true);
             }
 
-           // Console.WriteLine("|| CREATEMAKERTORDER||");
-            CreateMarketOrder(pendingOrder);
+            return CreateMarketOrder(pendingOrder);
         }
 
-        public static void OutputPendingOrdersTable(List<PendingOrder> pendingOrders) {
+        public static void OutputPendingOrdersTable(List<PendingOrder> pendingOrders)
+        {
 
             Console.WriteLine("");
             var pendingOrderGroups = pendingOrders.GroupBy(p => p.AccountNumber);
             foreach (var curPendingOrderGroup in pendingOrderGroups)
             {
                 var curAccountNumber = curPendingOrderGroup.Key;
-                Console.WriteLine("Account Number: "+ curAccountNumber);
+                Console.WriteLine("Account Number: " + curAccountNumber);
                 Console.WriteLine("");
                 Console.WriteLine(String.Format("{0,11}{1,7}{2,13}{3,6}{4,10}{5,9}", "Symbol", "Qtty.", "Tgt.Val.", "Cur.", "Target %", "Owned %"));
                 Console.WriteLine("--------------------------------------------------------");
 
                 foreach (var curPendingOrder in curPendingOrderGroup)
                 {
-                    Console.WriteLine(String.Format("{0,11}{1,7}{2,13}{3,6}{4,10}{5,9}", 
-                        curPendingOrder.Symbol.symbol, 
-                        curPendingOrder.Quantity, 
-                        Math.Round(curPendingOrder.TargetValue, 2), 
-                        curPendingOrder.Symbol.currency, 
+                    Console.WriteLine(String.Format("{0,11}{1,7}{2,13}{3,6}{4,10}{5,9}",
+                        curPendingOrder.Symbol.symbol,
+                        curPendingOrder.Quantity,
+                        Math.Round(curPendingOrder.TargetValue, 2),
+                        curPendingOrder.Symbol.currency,
                         Math.Round(curPendingOrder.TargetPercent, 2),
                         Math.Round(curPendingOrder.OwnedPercent, 2)
                     ));
                 }
 
                 var totalPendingCADValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_CAD).Sum(p => p.TargetValue);
-                Console.WriteLine("\nTotal Pending CAD Value: " + Math.Round(totalPendingCADValue, 2));
+                Console.WriteLine("\nTotal CAD Value: " + Math.Round(totalPendingCADValue, 2));
 
                 var totalPendingUSDValue = curPendingOrderGroup.Where(p => p.Symbol.currency == CURRENCY_USD).Sum(p => p.TargetValue);
-                Console.WriteLine("Total Pending USD Value: " + Math.Round(totalPendingUSDValue, 2));
+                Console.WriteLine("Total USD Value: " + Math.Round(totalPendingUSDValue, 2));
                 Console.WriteLine("");
             }
 
-            if (pendingOrders.Count() == 0) {
-                Console.WriteLine("No pending orders.");
+            if (pendingOrders.Count() == 0)
+            {
+                Console.WriteLine("Empty");
                 Console.WriteLine("");
             }
         }
 
-        public static void SellAllSecuritiesInAllAccounts() {
+        public static void SellAllSecuritiesInAllAccounts()
+        {
 
             foreach (var curAccount in curUser.accounts)
             {
@@ -197,10 +229,12 @@ namespace AutoQuestrader
 
         public static void SellAllSecuritiesInAccount(string accountNumber)
         {
-            if (IS_LIVE) {
+            if (IS_LIVE)
+            {
                 throw new Exception("Attempting to sell all securities on a LIVE account!");
             }
-            else {
+            else
+            {
 
                 PositionsResponse positions = GetPositions(accountNumber);
                 foreach (var curPosition in positions.positions)
@@ -213,14 +247,83 @@ namespace AutoQuestrader
             }
         }
 
-        public static void SellAllUSNGStocks(string curAccountNumber) {
+        public static void SellAllUSNGStocks(string curAccountNumber)
+        {
             PositionsResponse positions = GetPositions(curAccountNumber);
             var ngPositionUSD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_USD);
 
             if (ngPositionUSD != null && ngPositionUSD.openQuantity > 0)
-            { 
+            {
                 CreateMarketOrder(curAccountNumber, ngPositionUSD.symbol, ngPositionUSD.symbolId, false, (int)ngPositionUSD.openQuantity);
             }
+        }
+
+        public static List<PendingOrder> GetNorbertsGambitRequirements()
+        {
+            var NGSymbolUSD = GetSymbol(NG_SYMBOL_USD);
+            var NGQuoteUSD = GetQuote(NGSymbolUSD.symbolId);
+            var pendingNGOrders = new List<PendingOrder>();
+
+            foreach (var curAccount in curUser.accounts) {
+                // sell all NG stocks that are already converted to US
+                SellAllUSNGStocks(curAccount.number);
+
+                BalancesResponse balances = GetBalances(curAccount.number);
+                
+                // calculate total amount of USD that should be in the account
+                var accountCategories = db.AccountCategories.Where(p => p.AccountNumber == curAccount.number);
+                double requiredUSDValue = 0;
+                foreach (var curAccountCategory in accountCategories)
+                {
+                    foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
+                    {
+                        var symbol = GetSymbol(curStockTarget.Symbol);
+                        if (symbol.currency == CURRENCY_USD)
+                        {
+                            double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
+                            requiredUSDValue += totalEquity * ((curAccountCategory.Percent /100) * (curStockTarget.TargetPercent / 100));
+                        }
+                    }
+                }
+
+                // reduce required amount by USD assets already owned
+                PositionsResponse positions = GetPositions(curAccount.number);
+                foreach (var curPosition in positions.positions)
+                {
+                    var symbol = GetSymbol(curPosition.symbol);
+                    if (symbol.currency == CURRENCY_USD)
+                    {
+                        requiredUSDValue -= curPosition.currentMarketValue;
+                    }
+                }
+
+                // reduce required amount by the value that is already being processed
+                var ngPositionCAD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_CAD);
+                if (ngPositionCAD != null)
+                {
+                    requiredUSDValue -= ngPositionCAD.openQuantity * NGQuoteUSD.bidPrice;
+                }
+
+                if (requiredUSDValue > 0)
+                {
+                    var numNGSharesNeeded = (int)Math.Ceiling(requiredUSDValue / NGQuoteUSD.bidPrice);
+
+                    var NGSymbolCAD = GetSymbol(NG_SYMBOL_CAD);
+                    var NGQuoteCAD = GetQuote(NGSymbolCAD.symbolId);
+
+                    pendingNGOrders.Add(new PendingOrder()
+                    {
+                        AccountNumber = curAccount.number,
+                        Symbol = NGSymbolCAD,
+                        Quote = NGQuoteCAD,
+                        Quantity = numNGSharesNeeded,
+                        IsBuyOrder = true,
+                        TargetValue = numNGSharesNeeded * NGQuoteCAD.askPrice
+                    });
+                }
+            }
+
+            return pendingNGOrders;
         }
 
         public static List<PendingOrder> GetNorbertsGambitRequirements(List<PendingOrder> pendingOrders)
@@ -252,6 +355,7 @@ namespace AutoQuestrader
                 BalancesResponse balances = GetBalances(curAccountNumber);
                 var curBalanceUSD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD);
 
+                // calculate value already being converted
                 PositionsResponse positions = GetPositions(curAccountNumber);
                 var ngPositionCAD = positions.positions.FirstOrDefault(p => p.symbol == NG_SYMBOL_CAD);
                 var pendingNGValueUSD = 0.0;
@@ -262,14 +366,15 @@ namespace AutoQuestrader
 
                 var remainingUSDRequired = requiredUSD - (curBalanceUSD.cash + pendingNGValueUSD);
 
-                if (remainingUSDRequired > 0) {
-
+                if (remainingUSDRequired > 0)
+                {
                     var numNGSharesNeeded = (int)Math.Ceiling(remainingUSDRequired / NGQuoteUSD.bidPrice);
 
                     var NGSymbolCAD = GetSymbol(NG_SYMBOL_CAD);
                     var NGQuoteCAD = GetQuote(NGSymbolCAD.symbolId);
 
-                    pendingNGOrders.Add(new PendingOrder() {
+                    pendingNGOrders.Add(new PendingOrder()
+                    {
                         AccountNumber = curAccountNumber,
                         Symbol = NGSymbolCAD,
                         Quote = NGQuoteCAD,
@@ -286,13 +391,15 @@ namespace AutoQuestrader
         public static List<PendingOrder> GetPendingOrdersForAllAccounts()
         {
             var pendingOrders = new List<PendingOrder>();
-            foreach (var curAccount in curUser.accounts) {
+            foreach (var curAccount in curUser.accounts)
+            {
                 pendingOrders.AddRange(GetPendingOrdersForAccount(curAccount.number));
             }
             return pendingOrders;
         }
 
-        public static List<PendingOrder> GetPendingOrdersForAccount(string accountNumber) {
+        public static List<PendingOrder> GetPendingOrdersForAccount(string accountNumber)
+        {
             var pendingOrders = new List<PendingOrder>();
 
             PositionsResponse positions = GetPositions(accountNumber);
@@ -311,7 +418,7 @@ namespace AutoQuestrader
 
                     double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
                     double curPercentOwned = curPosition != null ? (curPosition.currentMarketValue / totalEquity) * 100 : 0;
-                      
+
                     double accountTargetPercent = ((curAccountCategory.Percent / 100) * (curStockTarget.TargetPercent / 100)) * 100;
                     double percentOfTarget = (curPercentOwned / accountTargetPercent) * 100;
 
@@ -341,7 +448,78 @@ namespace AutoQuestrader
             return pendingOrders;
         }
 
-        public static PositionsResponse GetPositions(string accountNumber) {
+        public static List<PendingOrder> GetAccountBreakdown(string accountNumber)
+        {
+            var pendingOrders = new List<PendingOrder>();
+
+            PositionsResponse positions = GetPositions(accountNumber);
+            BalancesResponse balances = GetBalances(accountNumber);
+
+            var accountCategories = db.AccountCategories.Where(p => p.AccountNumber == accountNumber);
+
+            foreach (var curAccountCategory in accountCategories)
+            {
+                foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
+                {
+                    var symbol = GetSymbol(curStockTarget.Symbol);
+                    var quote = GetQuote(symbol.symbolId);
+
+                    var curPosition = positions.positions.FirstOrDefault(p => p.symbol == curStockTarget.Symbol);
+                    double curPercentOwned = 0;
+                    double curValue = 0;
+                    int curQuantity = 0;
+                    if (curPosition != null)
+                    {
+                        double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
+                        curPercentOwned = curPosition != null ? (curPosition.currentMarketValue / totalEquity) * 100 : 0;
+                        curValue = curPosition.currentMarketValue;
+                        curQuantity = (int)curPosition.openQuantity;
+                    }
+
+                    double accountTargetPercent = ((curAccountCategory.Percent / 100) * (curStockTarget.TargetPercent / 100)) * 100;
+
+                    pendingOrders.Add(new PendingOrder()
+                    {
+                        AccountNumber = accountNumber,
+                        Symbol = symbol,
+                        Quote = quote,
+                        TargetValue = curValue,
+                        Quantity = curQuantity,
+                        TargetPercent = accountTargetPercent,
+                        OwnedPercent = curPercentOwned,
+                    });
+                }
+            }
+
+            // add owned stocks that are not on the target list
+            foreach (var curPosition in positions.positions)
+            {
+                if (pendingOrders.FirstOrDefault(p => p.Symbol.symbol == curPosition.symbol) == null)
+                {
+                    var symbol = GetSymbol(curPosition.symbol);
+                    var quote = GetQuote(symbol.symbolId);
+
+                    double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
+                    double curPercentOwned = curPosition != null ? (curPosition.currentMarketValue / totalEquity) * 100 : 0;
+
+                    pendingOrders.Add(new PendingOrder()
+                    {
+                        AccountNumber = accountNumber,
+                        Symbol = symbol,
+                        Quote = quote,
+                        TargetValue = curPosition.currentMarketValue,
+                        Quantity = (int)curPosition.openQuantity,
+                        TargetPercent = 0,
+                        OwnedPercent = curPercentOwned,
+                    });
+                }
+            }
+
+            return pendingOrders;
+        }
+
+        public static PositionsResponse GetPositions(string accountNumber)
+        {
             var request = new RestRequest("/v1/accounts/{accountNumber}/positions", Method.GET);
             request.AddUrlSegment("accountNumber", accountNumber);
             return client.Execute<PositionsResponse>(request).Data;
@@ -408,19 +586,31 @@ namespace AutoQuestrader
             return CreateMarketOrder(curPendingOrder.AccountNumber, curPendingOrder.Quote.symbol, curPendingOrder.Quote.symbolId, curPendingOrder.IsBuyOrder, curPendingOrder.Quantity);
         }
 
-        public static bool CreateMarketOrder(string accountNumber, string symbol ,int symbolId, bool isBuyOrder, int quantity)
+        public static bool CreateMarketOrder(string accountNumber, string symbol, int symbolId, bool isBuyOrder, int quantity)
         {
+            if (quantity <= 0)
+            {
+                throw new Exception("Attempting market order of 0 quantity.");
+            }
+
             var action = isBuyOrder ? "Buy" : "Sell";
             var orderImpact = GetMarketOrderImpact(accountNumber, symbolId, isBuyOrder, quantity);
 
             if (IS_LIVE)
             {
+                BalancesResponse balances = GetBalances(accountNumber);
+                var cashLevelCAD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_CAD).cash;
+                var cashLevelUSD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD).cash;
+
                 Console.WriteLine("\n-- Attempthing market order --");
                 Console.WriteLine("Symbol: " + symbol);
                 Console.WriteLine("Action: " + action);
                 Console.WriteLine("Value: " + orderImpact.tradeValueCalculation);
-                Console.WriteLine("Buying Power Result: " + orderImpact.buyingPowerResult);
                 Console.WriteLine("Estimated Commissions: " + orderImpact.estimatedCommissions);
+                Console.WriteLine("Buying Power Effect: " + orderImpact.buyingPowerEffect);
+                Console.WriteLine("Current Cash CAD: " + cashLevelCAD);
+                Console.WriteLine("Current Cash USD: " + cashLevelUSD);
+
                 Console.WriteLine("Allow? Y for yes");
                 var input = Console.ReadLine().Trim();
 
@@ -431,12 +621,14 @@ namespace AutoQuestrader
                 }
             }
 
-            if (orderImpact.buyingPowerResult < 0) {
+            if (orderImpact.buyingPowerResult < 0)
+            {
                 throw new Exception("Order would cause negative buying power.");
             }
 
-            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD) {
-                throw new Exception("Commissions greater than "+ UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100+ "% of value purchased.");
+            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
+            {
+                throw new Exception("Commissions greater than " + UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
             }
 
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
@@ -471,10 +663,10 @@ namespace AutoQuestrader
                 Console.WriteLine("");
                 return true;
             }
-            else {
+            else
+            {
                 throw new Exception("Create market order request failed.");
             }
         }
-
     }
 }
