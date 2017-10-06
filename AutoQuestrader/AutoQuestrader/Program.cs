@@ -24,23 +24,12 @@ namespace AutoQuestrader
         public static readonly string NG_SYMBOL_USD = "DLR.U.TO";
         public static readonly string CURRENCY_USD = "USD";
         public static readonly string CURRENCY_CAD = "CAD";
-        public static readonly double UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.01; // 1%
-        public static readonly double UNACCEPTABLE_NG_THRESHOLD = 500;
+        public static readonly double ACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.01; // 1%
+        public static readonly double ACCEPTABLE_NG_VALUE_THRESHOLD = 500;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hi, welcome to AutoQuestrader.");
-            Console.WriteLine("\nCalculating...");
-
-            db = new AutoQuestraderEntities();
-
-            var token = AuthHelper.RefreshToken(db, IS_LIVE);
-
-            client = new RestClient(token.ApiServer);
-            client.AddDefaultHeader("Authorization", token.TokenType + " " + token.AccessToken);
-
-            var userResponse = client.Execute<User>(new RestRequest("v1/accounts", Method.GET));
-            curUser = userResponse.Data;
+            Initialize();
 
 
             var pendingOrders = GetPendingOrdersForAllAccounts();
@@ -54,7 +43,31 @@ namespace AutoQuestrader
 
             HandlePurchasingOfPendingOrders(pendingOrders);
 
-            Console.WriteLine("\nPurchasing Complete.");
+
+            Console.WriteLine("\n-- Purchasing Complete --");
+            OutputFinalResults();
+
+
+            Console.WriteLine("\n\nPress enter to close...");
+            Console.ReadLine();
+        }
+
+        public static void Initialize() {
+            Console.WriteLine("Hi, welcome to AutoQuestrader.");
+            Console.WriteLine("\nCalculating...");
+
+            db = new AutoQuestraderEntities();
+
+            var token = AuthHelper.RefreshToken(db, IS_LIVE);
+
+            client = new RestClient(token.ApiServer);
+            client.AddDefaultHeader("Authorization", token.TokenType + " " + token.AccessToken);
+
+            var userResponse = client.Execute<User>(new RestRequest("v1/accounts", Method.GET));
+            curUser = userResponse.Data;
+        }
+
+        public static void OutputFinalResults() {
             foreach (var curAccount in curUser.accounts)
             {
                 Console.WriteLine("\nAccount: " + curAccount.type);
@@ -66,9 +79,6 @@ namespace AutoQuestrader
                 Console.WriteLine("\n-- Account Breakdown --");
                 OutputPendingOrdersTable(breakdownPendingOrders);
             }
-
-            Console.WriteLine("\n\nPress enter to close...");
-            Console.ReadLine();
         }
 
         public static void HandlePurchasingNorbertsGambitRequirements(List<PendingOrder> ngRequirements)
@@ -79,13 +89,16 @@ namespace AutoQuestrader
             }
         }
 
-        public static void HandlePurchasingNorbertsGambitRequirement(PendingOrder curNgRequirement, bool reducedQuantity = false)
+        public static void HandlePurchasingNorbertsGambitRequirement(PendingOrder curNgRequirement, bool firstTime = true)
         {
-            Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
-
-            if (curNgRequirement.TargetValue < UNACCEPTABLE_NG_THRESHOLD)
+            if (firstTime)
             {
-                Console.WriteLine("Current conversion amount is below acceptable threshold of: " + UNACCEPTABLE_NG_THRESHOLD);
+                Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
+            }
+
+            if (curNgRequirement.TargetValue < ACCEPTABLE_NG_VALUE_THRESHOLD)
+            {
+                Console.WriteLine("Current conversion amount is below acceptable threshold of: " + ACCEPTABLE_NG_VALUE_THRESHOLD);
                 Console.WriteLine("Skipping conversion.");
                 return;
             }
@@ -96,7 +109,7 @@ namespace AutoQuestrader
             var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == curNgRequirement.Symbol.currency).cash;
             if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
             {
-                if (!reducedQuantity)
+                if (firstTime)
                 {
                     Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
                     Console.WriteLine("Attempting to reduce quantity purchased...");
@@ -111,11 +124,11 @@ namespace AutoQuestrader
                     return;
                 }
 
-                HandlePurchasingNorbertsGambitRequirement(curNgRequirement, true);
+                HandlePurchasingNorbertsGambitRequirement(curNgRequirement, false);
                 return;
             }
 
-            Console.WriteLine("Proceeding to purchace $" + Math.Round(curNgRequirement.TargetValue, 2) + " in " + NG_SYMBOL_CAD);
+            Console.WriteLine("Proceeding to purchace $" + Math.Abs(orderImpact.buyingPowerEffect) + " in " + NG_SYMBOL_CAD);
             var success = CreateMarketOrder(curNgRequirement);
             if (success)
             {
@@ -139,16 +152,16 @@ namespace AutoQuestrader
             } while (pendingOrders.Count() > 0);
         }
 
-        public static bool HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool reducedQuantity = false)
+        public static bool HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool firstTime = true)
         {
             var orderImpact = GetMarketOrderImpact(pendingOrder);
 
-            if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
+            if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
             {
                 Console.WriteLine("Trade value calculation: " + orderImpact.tradeValueCalculation);
                 Console.WriteLine("Commission: " + orderImpact.estimatedCommissions);
 
-                Console.WriteLine("Commissions greater than " + UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
+                Console.WriteLine("Commissions greater than " + ACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
                 Console.WriteLine("Skipping order.");
                 return false;
             }
@@ -157,7 +170,7 @@ namespace AutoQuestrader
             var cashLevel = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == pendingOrder.Symbol.currency).cash;
             if (cashLevel < Math.Abs(orderImpact.buyingPowerEffect))
             {
-                if (!reducedQuantity)
+                if (firstTime)
                 {
                     Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
                     Console.WriteLine("Attempting to reduce quantity purchased...");
@@ -626,9 +639,9 @@ namespace AutoQuestrader
                 throw new Exception("Order would cause negative buying power.");
             }
 
-            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
+            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
             {
-                throw new Exception("Commissions greater than " + UNACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
+                throw new Exception("Commissions greater than " + ACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
             }
 
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
