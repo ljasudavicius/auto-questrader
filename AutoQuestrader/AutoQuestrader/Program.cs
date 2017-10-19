@@ -686,6 +686,7 @@ namespace AutoQuestrader
                 var cashLevelUSD = balances.perCurrencyBalances.FirstOrDefault(p => p.currency == CURRENCY_USD).cash;
 
                 Console.WriteLine("\n-- Attempthing market order --");
+                Console.WriteLine("Account: " + accountNumber);
                 Console.WriteLine("Symbol: " + symbol);
                 Console.WriteLine("Action: " + action);
                 Console.WriteLine("Value: " + orderImpact.tradeValueCalculation);
