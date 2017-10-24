@@ -5,6 +5,6 @@
     [CategoryName] VARCHAR(50) NOT NULL, 
     [ShouldBuy] BIT NOT NULL, 
     [ShouldSell] BIT NOT NULL, 
+	PRIMARY KEY (Symbol,CategoryName), 
     CONSTRAINT [FK_StockTarget_Category] FOREIGN KEY ([CategoryName]) REFERENCES [Category]([Name]), 
-    CONSTRAINT [PK_StockTarget] PRIMARY KEY ([Symbol])
 )

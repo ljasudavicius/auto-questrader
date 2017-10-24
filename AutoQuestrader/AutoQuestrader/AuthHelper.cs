@@ -55,6 +55,7 @@ namespace AutoQuestrader
         }
 
         public static Token RefreshToken(AutoQuestraderEntities db, Token curToken) {
+            IRestResponse<AuthTokenResponse> responseToken = null;
             try
             {
                 var authClient = new RestClient(curToken.LoginServer);
@@ -63,7 +64,7 @@ namespace AutoQuestrader
                 request.AddParameter("grant_type", "refresh_token");
                 request.AddParameter("refresh_token", curToken.RefreshToken);
 
-                IRestResponse<AuthTokenResponse> responseToken = authClient.Execute<AuthTokenResponse>(request);
+                responseToken = authClient.Execute<AuthTokenResponse>(request);
 
                 curToken.ApiServer = responseToken.Data.api_server;
                 curToken.AccessToken = responseToken.Data.access_token;
@@ -77,6 +78,8 @@ namespace AutoQuestrader
                 return curToken;
             }
             catch {
+                Console.WriteLine("Error logging in: " + responseToken.Content);
+
                 return RefreshToken(db, PromptForNewRefreshToken(curToken));
             }
         }

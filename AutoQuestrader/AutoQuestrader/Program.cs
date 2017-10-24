@@ -31,6 +31,8 @@ namespace AutoQuestrader
         {
             Initialize();
 
+            Console.WriteLine("\nCalculating target positions...");
+
             var pendingOrders = GetPendingOrdersForAllAccounts();
             Console.WriteLine("\n-- Pending Orders --");
             OutputPendingOrdersTable(pendingOrders);
@@ -53,8 +55,11 @@ namespace AutoQuestrader
         }
 
         public static void Initialize() {
+
+            Console.SetWindowSize(160, 70);
+        
             Console.WriteLine("Hi, welcome to AutoQuestrader.");
-            Console.WriteLine("\nCalculating...");
+            Console.WriteLine("\nLogging in...");
 
             db = new AutoQuestraderEntities();
 
@@ -62,6 +67,8 @@ namespace AutoQuestrader
 
             client = new RestClient(token.ApiServer);
             client.AddDefaultHeader("Authorization", token.TokenType + " " + token.AccessToken);
+
+            Console.WriteLine("\nGetting User Information...");
 
             var userResponse = client.Execute<User>(new RestRequest("v1/accounts", Method.GET));
             curUser = userResponse.Data;
@@ -145,7 +152,6 @@ namespace AutoQuestrader
                 int i = random.Next(pendingOrders.Count);
                 var curPendingOrder = pendingOrders[i];
 
-                Console.WriteLine("\nAttempting to purchase: " + curPendingOrder.Symbol.symbol);
                 HandlePurchaseOfPendingOrder(curPendingOrder);
 
                 pendingOrders.Remove(curPendingOrder);
@@ -154,6 +160,11 @@ namespace AutoQuestrader
 
         public static bool HandlePurchaseOfPendingOrder(PendingOrder pendingOrder, bool firstTime = true)
         {
+            if (firstTime)
+            {
+                Console.WriteLine("\nAttempting to purchase: " + pendingOrder.Symbol.symbol + " on account # " + pendingOrder.AccountNumber);
+            }
+
             var orderImpact = GetMarketOrderImpact(pendingOrder);
 
             if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)

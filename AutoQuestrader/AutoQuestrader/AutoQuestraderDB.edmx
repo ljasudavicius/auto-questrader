@@ -26,9 +26,17 @@
           </Key>
           <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
         </EntityType>
+        <EntityType Name="SettingValues">
+          <Key>
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Value" Type="varchar(max)" />
+        </EntityType>
         <EntityType Name="StockTarget">
           <Key>
             <PropertyRef Name="Symbol" />
+            <PropertyRef Name="CategoryName" />
           </Key>
           <Property Name="Symbol" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="TargetPercent" Type="float" Nullable="false" />
@@ -76,6 +84,7 @@
           <EntitySet Name="__RefactorLog" EntityType="Self.__RefactorLog" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AccountCategory" EntityType="Self.AccountCategory" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Category" EntityType="Self.Category" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SettingValues" EntityType="Self.SettingValues" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockTarget" EntityType="Self.StockTarget" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Token" EntityType="Self.Token" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_AccountCategory_Category" Association="Self.FK_AccountCategory_Category">
@@ -95,6 +104,7 @@
           <EntitySet Name="C__RefactorLog" EntityType="AutoQuestraderModel.C__RefactorLog" />
           <EntitySet Name="AccountCategories" EntityType="AutoQuestraderModel.AccountCategory" />
           <EntitySet Name="Categories" EntityType="AutoQuestraderModel.Category" />
+          <EntitySet Name="SettingValues" EntityType="AutoQuestraderModel.SettingValue" />
           <EntitySet Name="StockTargets" EntityType="AutoQuestraderModel.StockTarget" />
           <EntitySet Name="Tokens" EntityType="AutoQuestraderModel.Token" />
           <AssociationSet Name="FK_AccountCategory_Category" Association="AutoQuestraderModel.FK_AccountCategory_Category">
@@ -130,9 +140,17 @@
           <NavigationProperty Name="AccountCategories" Relationship="AutoQuestraderModel.FK_AccountCategory_Category" FromRole="Category" ToRole="AccountCategory" />
           <NavigationProperty Name="StockTargets" Relationship="AutoQuestraderModel.FK_StockTarget_Category" FromRole="Category" ToRole="StockTarget" />
         </EntityType>
+        <EntityType Name="SettingValue">
+          <Key>
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Value" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+        </EntityType>
         <EntityType Name="StockTarget">
           <Key>
             <PropertyRef Name="Symbol" />
+            <PropertyRef Name="CategoryName" />
           </Key>
           <Property Name="Symbol" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="TargetPercent" Type="Double" Nullable="false" />
@@ -202,6 +220,14 @@
           <EntitySetMapping Name="Categories">
             <EntityTypeMapping TypeName="AutoQuestraderModel.Category">
               <MappingFragment StoreEntitySet="Category">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SettingValues">
+            <EntityTypeMapping TypeName="AutoQuestraderModel.SettingValue">
+              <MappingFragment StoreEntitySet="SettingValues">
+                <ScalarProperty Name="Value" ColumnName="Value" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
             </EntityTypeMapping>

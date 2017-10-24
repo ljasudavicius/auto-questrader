@@ -103,6 +103,9 @@
     <Compile Include="Models\PendingOrder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SettingValue.cs">
+      <DependentUpon>AutoQuestraderDB.tt</DependentUpon>
+    </Compile>
     <Compile Include="StockTarget.cs">
       <DependentUpon>AutoQuestraderDB.tt</DependentUpon>
     </Compile>

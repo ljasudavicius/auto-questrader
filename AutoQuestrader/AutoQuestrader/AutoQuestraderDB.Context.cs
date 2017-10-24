@@ -28,6 +28,7 @@ namespace AutoQuestrader
         public virtual DbSet<C__RefactorLog> C__RefactorLog { get; set; }
         public virtual DbSet<AccountCategory> AccountCategories { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
+        public virtual DbSet<SettingValue> SettingValues { get; set; }
         public virtual DbSet<StockTarget> StockTargets { get; set; }
         public virtual DbSet<Token> Tokens { get; set; }
     }
