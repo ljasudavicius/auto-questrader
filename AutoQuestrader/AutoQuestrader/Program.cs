@@ -31,6 +31,9 @@ namespace AutoQuestrader
         {
             Initialize();
 
+
+            Console.BufferHeight = Int16.MaxValue - 1;
+
             Console.WriteLine("\nCalculating target positions...");
 
             var pendingOrders = GetPendingOrdersForAllAccounts();

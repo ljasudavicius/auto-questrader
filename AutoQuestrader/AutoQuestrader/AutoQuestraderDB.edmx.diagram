@@ -6,10 +6,10 @@
     <edmx:Diagrams>
       <Diagram DiagramId="a378500515ea43e1b3d45385ab282269" Name="Diagram1" >
         <EntityTypeShape EntityType="AutoQuestraderModel.C__RefactorLog" Width="1.5" PointX="5.75" PointY="0.75" />
-        <EntityTypeShape EntityType="AutoQuestraderModel.AccountCategory" Width="1.5" PointX="3" PointY="1" />
+        <EntityTypeShape EntityType="AutoQuestraderModel.AccountCategory" Width="1.5" PointX="3" PointY="4" />
         <EntityTypeShape EntityType="AutoQuestraderModel.Category" Width="1.5" PointX="0.75" PointY="2.625" />
         <EntityTypeShape EntityType="AutoQuestraderModel.SettingValue" Width="1.5" PointX="5.75" PointY="2.75" />
-        <EntityTypeShape EntityType="AutoQuestraderModel.StockTarget" Width="1.5" PointX="3" PointY="3.625" />
+        <EntityTypeShape EntityType="AutoQuestraderModel.StockTarget" Width="1.5" PointX="3" PointY="1" />
         <EntityTypeShape EntityType="AutoQuestraderModel.Token" Width="1.5" PointX="5.75" PointY="5.75" />
         <AssociationConnector Association="AutoQuestraderModel.FK_AccountCategory_Category" />
         <AssociationConnector Association="AutoQuestraderModel.FK_StockTarget_Category" />
