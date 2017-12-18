@@ -619,30 +619,32 @@ namespace AutoQuestrader
         {
             var request = new RestRequest("/v1/accounts/{accountNumber}/positions", Method.GET);
             request.AddUrlSegment("accountNumber", accountNumber);
-            return client.Execute<PositionsResponse>(request).Data;
+            var response = client.Execute<PositionsResponse>(request).Data;
+            return response;
         }
 
         public static BalancesResponse GetBalances(string accountNumber)
         {
             var request = new RestRequest("/v1/accounts/{accountNumber}/balances", Method.GET);
             request.AddUrlSegment("accountNumber", accountNumber);
-            return client.Execute<BalancesResponse>(request).Data;
+            var response = client.Execute<BalancesResponse>(request).Data;
+            return response;
         }
 
         public static Symbol GetSymbol(string symbolName)
         {
             var request = new RestRequest("/v1/symbols/", Method.GET);
             request.AddParameter("names", symbolName);
-
-            return client.Execute<SymbolsResponse>(request).Data.symbols.FirstOrDefault();
+            var response = client.Execute<SymbolsResponse>(request).Data.symbols.FirstOrDefault();
+            return response;
         }
 
         public static Quote GetQuote(int symbolId)
         {
             var request = new RestRequest("/v1/markets/quotes/{symbolId}", Method.GET);
             request.AddUrlSegment("symbolId", symbolId.ToString());
-
-            return client.Execute<QuotesResponse>(request).Data.quotes.FirstOrDefault();
+            var response = client.Execute<QuotesResponse>(request).Data.quotes.FirstOrDefault();
+            return response;
         }
 
         public static OrderImpactResponse GetMarketOrderImpact(PendingOrder curPendingOrder)
@@ -674,6 +676,11 @@ namespace AutoQuestrader
             request.AddBody(body);
 
             var response = client.Execute<OrderImpactResponse>(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception(response.StatusDescription);
+            }
 
             return response.Data;
         }
