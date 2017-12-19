@@ -433,66 +433,6 @@ namespace AutoQuestrader
             return pendingNGOrders;
         }
 
-        public static List<PendingOrder> GetTargetPositionsForAllAccounts()
-        {
-            var pendingOrders = new List<PendingOrder>();
-            foreach (var curAccount in curUser.accounts)
-            {
-                pendingOrders.AddRange(GetTargetPositionsForAccount(curAccount.number));
-            }
-            return pendingOrders;
-        }
-
-        public static List<PendingOrder> GetTargetPositionsForAccount(string accountNumber)
-        {
-            var pendingOrders = new List<PendingOrder>();
-
-            PositionsResponse positions = GetPositions(accountNumber);
-            BalancesResponse balances = GetBalances(accountNumber);
-
-            var accountCategories = db.AccountCategories.Where(p => p.AccountNumber == accountNumber);
-
-            foreach (var curAccountCategory in accountCategories)
-            {
-                foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
-                {
-                    var symbol = GetSymbol(curStockTarget.Symbol);
-                    var quote = GetQuote(symbol.symbolId);
-
-                    var curPosition = positions.positions.FirstOrDefault(p => p.symbol == curStockTarget.Symbol);
-
-                    double totalEquity = balances.combinedBalances.FirstOrDefault(p => p.currency == symbol.currency).totalEquity;
-                    double curPercentOwned = curPosition != null ? (curPosition.currentMarketValue / totalEquity) * 100 : 0;
-
-                    double accountTargetPercent = ((curAccountCategory.Percent / 100) * (curStockTarget.TargetPercent / 100)) * 100;
-                    double percentOfTarget = (curPercentOwned / accountTargetPercent) * 100;
-
-                    if (percentOfTarget < 100)
-                    {
-                        var valueToBuy = ((accountTargetPercent - curPercentOwned) / 100) * totalEquity;
-                        int numSharesToBuy = (int)Math.Floor(valueToBuy / quote.askPrice);
-
-                        if (numSharesToBuy > 0)
-                        {
-                            pendingOrders.Add(new PendingOrder()
-                            {
-                                AccountNumber = accountNumber,
-                                Symbol = symbol,
-                                Quote = quote,
-                                IsBuyOrder = true,
-                                TargetValue = valueToBuy,
-                                Quantity = numSharesToBuy,
-                                TargetPercent = accountTargetPercent,
-                                OwnedPercent = curPercentOwned,
-                            });
-                        }
-                    }
-                }
-            }
-
-            return pendingOrders;
-        }
-
         public static List<PendingOrder> GetPendingOrdersForAllAccounts()
         {
             var pendingOrders = new List<PendingOrder>();
