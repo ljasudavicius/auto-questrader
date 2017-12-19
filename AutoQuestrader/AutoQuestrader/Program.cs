@@ -31,9 +31,6 @@ namespace AutoQuestrader
         {
             Initialize();
 
-
-            Console.BufferHeight = Int16.MaxValue - 1;
-
             Console.WriteLine("\nCalculating target positions...");
 
             var pendingOrders = GetPendingOrdersForAllAccounts();
@@ -60,7 +57,8 @@ namespace AutoQuestrader
         public static void Initialize() {
 
             Console.SetWindowSize(160, 70);
-        
+            Console.BufferHeight = Int16.MaxValue - 1;
+
             Console.WriteLine("Hi, welcome to AutoQuestrader.");
             Console.WriteLine("\nLogging in...");
 
@@ -95,7 +93,10 @@ namespace AutoQuestrader
         {
             foreach (var curNgRequirement in ngRequirements)
             {
-                HandlePurchasingNorbertsGambitRequirement(curNgRequirement);
+                if (curNgRequirement.Quantity > 0)
+                {
+                    HandlePurchasingNorbertsGambitRequirement(curNgRequirement);
+                }
             }
         }
 
@@ -104,6 +105,13 @@ namespace AutoQuestrader
             if (firstTime)
             {
                 Console.WriteLine("Currency conversion (Norberts Gambit) is required to purchase some securities in USD.");
+            }
+
+            if (curNgRequirement.Quantity <= 0)
+            {
+                Console.WriteLine("Order quantity reduced to zero.");
+                Console.WriteLine("Skipping order.");
+                return;
             }
 
             if (curNgRequirement.TargetValue < ACCEPTABLE_NG_VALUE_THRESHOLD)
@@ -123,15 +131,12 @@ namespace AutoQuestrader
                 {
                     Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
                     Console.WriteLine("Attempting to reduce quantity purchased...");
+
+                    curNgRequirement.Quantity = (int)Math.Floor(cashLevel / orderImpact.price);
                 }
-
-                curNgRequirement.Quantity -= 1;
-
-                if (curNgRequirement.Quantity <= 0)
+                else
                 {
-                    Console.WriteLine("Order quantity reduced to zero.");
-                    Console.WriteLine("Skipping order.");
-                    return;
+                    curNgRequirement.Quantity -= 1;
                 }
 
                 HandlePurchasingNorbertsGambitRequirement(curNgRequirement, false);
@@ -195,9 +200,12 @@ namespace AutoQuestrader
                 {
                     Console.WriteLine("Order of " + Math.Abs(orderImpact.buyingPowerEffect) + " exceeds current cash level: " + cashLevel);
                     Console.WriteLine("Attempting to reduce quantity purchased...");
-                }
 
-                pendingOrder.Quantity -= 1;
+                    pendingOrder.Quantity = (int)Math.Floor(cashLevel / orderImpact.price);
+                }
+                else {
+                    pendingOrder.Quantity -= 1;
+                }
 
                 return HandlePurchaseOfPendingOrder(pendingOrder, false);
             }
@@ -680,6 +688,11 @@ namespace AutoQuestrader
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new Exception(response.StatusDescription);
+            }
+
+            if (response.Data.buyingPowerEffect == 0)
+            {
+                throw new Exception("Error fetching order impact. Check response for more details.");
             }
 
             return response.Data;
