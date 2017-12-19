@@ -51,7 +51,8 @@ namespace AutoQuestrader
                 }
             }
             catch {
-                throw new Exception("Error sending email. Make use the credentials are correct. If using gmail you may need to allow this app: https://support.google.com/accounts/answer/6010255?hl=en-GB");
+                Console.WriteLine("Error sending email. Make use the credentials are correct. If using gmail you may need to allow this app: https://support.google.com/accounts/answer/6010255?hl=en-GB");
+                SendEmail(subject, body, toAddress);
             }
         }
 

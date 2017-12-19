@@ -168,6 +168,13 @@ namespace AutoQuestrader
                 Console.WriteLine("\nAttempting to purchase: " + pendingOrder.Symbol.symbol + " on account # " + pendingOrder.AccountNumber);
             }
 
+            if (pendingOrder.Quantity <= 0)
+            {
+                Console.WriteLine("Order quantity reduced to zero.");
+                Console.WriteLine("Skipping order.");
+                return false;
+            }
+
             var orderImpact = GetMarketOrderImpact(pendingOrder);
 
             if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
@@ -191,13 +198,6 @@ namespace AutoQuestrader
                 }
 
                 pendingOrder.Quantity -= 1;
-
-                if (pendingOrder.Quantity <= 0)
-                {
-                    Console.WriteLine("Order quantity reduced to zero.");
-                    Console.WriteLine("Skipping order.");
-                    return false;
-                }
 
                 return HandlePurchaseOfPendingOrder(pendingOrder, false);
             }
