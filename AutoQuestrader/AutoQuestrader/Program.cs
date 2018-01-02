@@ -55,8 +55,7 @@ namespace AutoQuestrader
         }
 
         public static void Initialize() {
-
-            Console.SetWindowSize(160, 70);
+            Console.SetWindowSize((int)(Console.LargestWindowWidth * 0.6), (int)(Console.LargestWindowHeight * 0.8));
             Console.BufferHeight = Int16.MaxValue - 1;
 
             Console.WriteLine("Hi, welcome to AutoQuestrader.");
