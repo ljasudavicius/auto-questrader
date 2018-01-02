@@ -24,7 +24,7 @@ namespace AutoQuestrader
         public static readonly string NG_SYMBOL_USD = "DLR.U.TO";
         public static readonly string CURRENCY_USD = "USD";
         public static readonly string CURRENCY_CAD = "CAD";
-        public static readonly double ACCEPTABLE_COMMISSION_PECENT_THRESHOLD = 0.01; // 1%
+        public static readonly double ACCEPTABLE_COMMISSION_PERCENT_THRESHOLD = 0.01; // 1%
         public static readonly double ACCEPTABLE_NG_VALUE_THRESHOLD = 500;
 
         static void Main(string[] args)
@@ -182,12 +182,12 @@ namespace AutoQuestrader
 
             var orderImpact = GetMarketOrderImpact(pendingOrder);
 
-            if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
+            if (orderImpact.estimatedCommissions / (orderImpact.price * pendingOrder.Quantity) > ACCEPTABLE_COMMISSION_PERCENT_THRESHOLD)
             {
                 Console.WriteLine("Trade value calculation: " + orderImpact.tradeValueCalculation);
                 Console.WriteLine("Commission: " + orderImpact.estimatedCommissions);
 
-                Console.WriteLine("Commissions greater than " + ACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
+                Console.WriteLine("Commissions greater than " + ACCEPTABLE_COMMISSION_PERCENT_THRESHOLD * 100 + "% of value purchased.");
                 Console.WriteLine("Skipping order.");
                 return false;
             }
@@ -684,9 +684,9 @@ namespace AutoQuestrader
                 throw new Exception("Order would cause negative buying power.");
             }
 
-            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > ACCEPTABLE_COMMISSION_PECENT_THRESHOLD)
+            if (orderImpact.estimatedCommissions / (orderImpact.price * quantity) > ACCEPTABLE_COMMISSION_PERCENT_THRESHOLD)
             {
-                throw new Exception("Commissions greater than " + ACCEPTABLE_COMMISSION_PECENT_THRESHOLD * 100 + "% of value purchased.");
+                throw new Exception("Commissions greater than " + ACCEPTABLE_COMMISSION_PERCENT_THRESHOLD * 100 + "% of value purchased.");
             }
 
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders", Method.POST);
