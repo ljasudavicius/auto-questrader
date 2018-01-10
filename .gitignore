@@ -241,3 +241,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 AutoQuestrader/DB/DB.jfm
+AutoQuestraderWeb/AutoQuestraderWeb/appsettings.json
