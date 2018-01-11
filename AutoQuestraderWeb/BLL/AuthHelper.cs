@@ -1,4 +1,4 @@
-﻿using AutoQuestrader.APIModels;
+﻿using BLL.APIModels;
 using BLL;
 using BLL.DBModels;
 using RestSharp;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutoQuestrader
+namespace BLL
 {
     public static class AuthHelper
     {

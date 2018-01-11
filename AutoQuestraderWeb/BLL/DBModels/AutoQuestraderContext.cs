@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -12,12 +13,15 @@ namespace BLL.DBModels
         public virtual DbSet<StockTarget> StockTarget { get; set; }
         public virtual DbSet<Token> Token { get; set; }
 
+        public AutoQuestraderContext(DbContextOptions<AutoQuestraderContext> options) : base(options)
+        {
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer(@);
+               // optionsBuilder.UseSqlServer(System.Configuration.GetConnectionString("AutoQuestraderDatabase"));
             }
         }
 

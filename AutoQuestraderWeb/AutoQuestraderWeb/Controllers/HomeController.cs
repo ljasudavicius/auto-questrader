@@ -5,13 +5,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using AutoQuestraderWeb.Models;
+using BLL.DBModels;
+using BLL;
 
 namespace AutoQuestraderWeb.Controllers
 {
     public class HomeController : Controller
     {
+        AutoQuestraderContext db;
+
+        public HomeController(AutoQuestraderContext db) {
+            this.db = db;
+        }
+
         public IActionResult Index()
         {
+            var trader = new Trader(db);
+            trader.Main();
+
             return View();
         }
 
