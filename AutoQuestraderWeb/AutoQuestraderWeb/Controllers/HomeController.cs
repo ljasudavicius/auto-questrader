@@ -12,16 +12,16 @@ namespace AutoQuestraderWeb.Controllers
 {
     public class HomeController : Controller
     {
-        AutoQuestraderContext db;
+        //AutoQuestraderContext db;
 
-        public HomeController(AutoQuestraderContext db) {
-            this.db = db;
-        }
+        //public HomeController(AutoQuestraderContext db) {
+        //    this.db = db;
+        //}
 
         public IActionResult Index()
         {
-            var trader = new Trader(db);
-            trader.Main();
+           // var trader = new Trader(db);
+           // trader.Main();
 
             return View();
         }
