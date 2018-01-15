@@ -59,6 +59,39 @@ namespace BLL
             return curToken;
         }
 
+        public static Token GetRefreshToken(string client_id, string code,string redirectUri, bool live) {
+            IRestResponse<AuthTokenResponse> responseToken = null;
+            try
+            {
+                var loginServer = live ? liveServer : practiceServer;
+                var authClient = new RestClient(loginServer);
+
+                var request = new RestRequest("oauth2/token", Method.GET);
+                request.AddParameter("client_id", client_id);
+                request.AddParameter("code", code);
+                request.AddParameter("grant_type", "authorization_code");
+                request.AddParameter("redirect_uri", redirectUri);
+
+                responseToken = authClient.Execute<AuthTokenResponse>(request);
+
+                var curToken = new Token();
+                
+                curToken.ApiServer = responseToken.Data.api_server;
+                curToken.AccessToken = responseToken.Data.access_token;
+                curToken.ExpiresIn = responseToken.Data.expires_in;
+                curToken.ExpiresDate = DateTimeOffset.UtcNow.AddSeconds(responseToken.Data.expires_in - 30); // create a 30 second buffer to account for network slowness
+                curToken.RefreshToken = responseToken.Data.refresh_token;
+                curToken.TokenType = responseToken.Data.token_type;
+
+                return curToken;
+            }
+            catch
+            {
+                Console.WriteLine("Error logging in: " + responseToken.Content);
+                return null;
+            }
+        }
+
         public static Token RefreshToken(AutoQuestraderContext db, Token curToken)
         {
             IRestResponse<AuthTokenResponse> responseToken = null;

@@ -7,21 +7,46 @@ using Microsoft.AspNetCore.Mvc;
 using AutoQuestraderWeb.Models;
 using BLL.DBModels;
 using BLL;
+using BLL.Models;
+using Microsoft.Extensions.Options;
+using RestSharp;
+using BLL.APIModels;
+using Newtonsoft.Json;
 
 namespace AutoQuestraderWeb.Controllers
 {
     public class HomeController : Controller
     {
-        //AutoQuestraderContext db;
+        AutoQuestraderContext db;
+        AppSettings appSettings;
 
-        //public HomeController(AutoQuestraderContext db) {
-        //    this.db = db;
-        //}
-
-        public IActionResult Index()
+        public HomeController(AutoQuestraderContext db, IOptions<AppSettings> appSettings)
         {
-           // var trader = new Trader(db);
-           // trader.Main();
+            this.db = db;
+            this.appSettings = appSettings.Value;
+        }
+
+        public IActionResult Index(string code)
+        {
+            // var trader = new Trader(db);
+            // trader.Main();
+
+            ViewBag.QTAppKey = appSettings.QuestradeaAppKey;
+
+            if (!string.IsNullOrEmpty(code)) {
+
+                var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, "https://automaticinvesting.ca", true);
+                RestClient client;
+                client = new RestClient(curToken.ApiServer);
+                client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
+
+                ViewBag.token = JsonConvert.SerializeObject(curToken);
+
+                var request = new RestRequest("/v1/accounts", Method.GET);
+                var accounts = client.Execute< AccountsResponse>(request).Data;
+
+                ViewBag.testResponse = JsonConvert.SerializeObject(accounts);
+            }
 
             return View();
         }
