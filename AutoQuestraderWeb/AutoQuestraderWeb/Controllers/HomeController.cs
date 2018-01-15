@@ -35,17 +35,21 @@ namespace AutoQuestraderWeb.Controllers
 
             if (!string.IsNullOrEmpty(code)) {
 
-                var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, "https://automaticinvesting.ca", true);
-                RestClient client;
-                client = new RestClient(curToken.ApiServer);
-                client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
+                try
+                {
+                    var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, "https://automaticinvesting.ca", true);
+                    RestClient client;
+                    client = new RestClient(curToken.ApiServer);
+                    client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
 
-                ViewBag.token = JsonConvert.SerializeObject(curToken);
+                    var request = new RestRequest("/v1/accounts", Method.GET);
+                    var accounts = client.Execute<AccountsResponse>(request).Data;
 
-                var request = new RestRequest("/v1/accounts", Method.GET);
-                var accounts = client.Execute< AccountsResponse>(request).Data;
-
-                ViewBag.testResponse = JsonConvert.SerializeObject(accounts);
+                    ViewBag.testResponse = JsonConvert.SerializeObject(accounts);
+                }
+                catch {
+                    ViewBag.message = "Error reading from QT, please try again.";
+                }
             }
 
             return View();

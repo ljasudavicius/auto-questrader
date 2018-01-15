@@ -242,3 +242,4 @@ ModelManifest.xml
 .fake/
 AutoQuestrader/DB/DB.jfm
 AutoQuestraderWeb/AutoQuestraderWeb/appsettings.json
+AutoQuestraderWeb/DB/DB.jfm
