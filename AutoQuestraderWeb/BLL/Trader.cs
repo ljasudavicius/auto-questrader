@@ -1,4 +1,4 @@
-﻿using BLL.APIModels;
+﻿using BLL.QTModels;
 using BLL.Models;
 using BLL.DBModels;
 using RestSharp;
@@ -608,7 +608,7 @@ namespace BLL
         {
             var request = new RestRequest("/v1/accounts/{accountNumber}/orders/impact", Method.POST);
             request.AddUrlSegment("accountNumber", accountNumber);
-
+           
             var body = new
             {
                 accountNumber = accountNumber,

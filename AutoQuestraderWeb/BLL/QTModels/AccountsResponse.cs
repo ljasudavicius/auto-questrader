@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BLL.APIModels
+namespace BLL.QTModels
 {
     public class AccountsResponse
     {

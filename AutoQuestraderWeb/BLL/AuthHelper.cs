@@ -1,4 +1,4 @@
-﻿using BLL.APIModels;
+﻿using BLL.QTModels;
 using BLL;
 using BLL.DBModels;
 using RestSharp;
@@ -59,7 +59,7 @@ namespace BLL
             return curToken;
         }
 
-        public static Token GetRefreshToken(string client_id, string code,string redirectUri, bool live) {
+        public static Token GetRefreshToken(string client_id, string code, string redirectUri, bool live) {
             IRestResponse<AuthTokenResponse> responseToken = null;
             try
             {

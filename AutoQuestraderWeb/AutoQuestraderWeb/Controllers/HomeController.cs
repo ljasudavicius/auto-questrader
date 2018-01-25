@@ -10,8 +10,9 @@ using BLL;
 using BLL.Models;
 using Microsoft.Extensions.Options;
 using RestSharp;
-using BLL.APIModels;
+using BLL.QTModels;
 using Newtonsoft.Json;
+using BLL.Misc;
 
 namespace AutoQuestraderWeb.Controllers
 {
@@ -26,6 +27,40 @@ namespace AutoQuestraderWeb.Controllers
             this.appSettings = appSettings.Value;
         }
 
+        public IActionResult GetLoginUrl(string email) {
+
+            var response = new ApiResponse();
+
+            var redirectUrl = appSettings.BaseUrl + GlobalVars.LOGIN_REDIRECT_PATH + "?a=" + MiscHelpers.Base64Encode(email);
+
+            var loginUrl = "https://login.questrade.com/oauth2/authorize";
+            loginUrl += "?client_id=" + appSettings.QuestradeaAppKey;
+            loginUrl += "&response_type=code";
+            loginUrl += "&redirect_uri=" + redirectUrl;
+
+            response.payload = loginUrl;
+
+            return Json(response);
+        }
+
+        public IActionResult Login(string code, string a) {
+
+            var response = new ApiResponse();
+
+            var email = MiscHelpers.Base64Decode(a);
+
+            var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, appSettings.BaseUrl, true);
+            RestClient client = new RestClient(curToken.ApiServer);
+            client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
+
+            var request = new RestRequest("/v1/accounts", Method.GET);
+            var accounts = client.Execute<AccountsResponse>(request).Data;
+
+            response.payload = accounts;
+
+            return Json(response);
+        }
+
         public IActionResult Index(string code)
         {
             // var trader = new Trader(db);
@@ -37,9 +72,8 @@ namespace AutoQuestraderWeb.Controllers
 
                 try
                 {
-                    var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, "https://automaticinvesting.ca", true);
-                    RestClient client;
-                    client = new RestClient(curToken.ApiServer);
+                    var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, appSettings.BaseUrl, true);
+                    RestClient client = new RestClient(curToken.ApiServer);
                     client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
 
                     var request = new RestRequest("/v1/accounts", Method.GET);

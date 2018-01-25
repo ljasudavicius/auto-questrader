@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BLL.APIModels
+namespace BLL.QTModels
 {
-    public class PositionsResponse
+    public class SymbolsResponse
     {
-        public List<Position> positions { get; set; }
+        public List<Symbol> symbols { get; set; }
     }
 }
+
