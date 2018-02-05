@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using BLL.DBModels;
 using Microsoft.EntityFrameworkCore;
+using WebSocketHelper;
 
 namespace AutoQuestraderWeb
 {
@@ -51,6 +52,15 @@ namespace AutoQuestraderWeb
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            };
+
+            app.UseWebSockets(webSocketOptions);
+            app.UseWebSocketRequestHandlerMiddleware();
         }
     }
 }
