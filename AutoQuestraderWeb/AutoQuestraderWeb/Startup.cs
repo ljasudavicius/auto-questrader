@@ -61,6 +61,7 @@ namespace AutoQuestraderWeb
 
             app.UseWebSockets(webSocketOptions);
             app.UseWebSocketRequestHandlerMiddleware();
+
         }
     }
 }

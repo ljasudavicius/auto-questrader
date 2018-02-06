@@ -43,14 +43,27 @@ Response: @ViewBag.testResponse
     //The address of our HTTP-handler
     var handlerUrl = "ws://" + window.location.host + "/ws";
 
+
     function sendData() {
 
         //Initialize WebSocket.
         initWebSocket();
 
         //Send data if WebSocket is opened.
-        if (webSocket.OPEN && webSocket.readyState === 1)
-            webSocket.send(nameTextBox.value);
+        if (webSocket.OPEN && webSocket.readyState === 1) {
+
+            var dataWrapper = {
+                methodName: "echo",
+                parameters: {
+                    text: nameTextBox.value,
+                    text2: "asdf",
+                },
+            };
+         
+            var jsonString = JSON.stringify(dataWrapper);
+            webSocket.send(jsonString);
+        }
+           
 
         //If WebSocket is closed, show message.
         if (webSocket.readyState === 2 || webSocket.readyState === 3)
@@ -77,7 +90,17 @@ Response: @ViewBag.testResponse
             //Open connection  handler.
             webSocket.onopen = function () {
                 webSocketStatusSpan.innerText = "WebSocket opened successfully!";
-                webSocket.send(nameTextBox.value);
+
+                var dataWrapper = {
+                    methodName: "echo",
+                    parameters: {
+                        text: nameTextBox.value,
+                        text2: "asdf",
+                    },
+                };
+
+                var jsonString = JSON.stringify(dataWrapper);
+                webSocket.send(jsonString);
             };
 
             //Message data handler.

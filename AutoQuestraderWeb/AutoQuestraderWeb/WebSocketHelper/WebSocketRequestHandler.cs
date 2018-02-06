@@ -4,11 +4,21 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using AutoQuestraderWeb.WebSocketHelper;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Reflection;
+using BLL.Helpers;
 
 namespace WebSocketHelper
 {
     public class WebSocketRequestHandler
     {
+        public static Dictionary<string, MethodInfo> functions = new Dictionary<string, MethodInfo>() {
+            { "echo",  typeof(WebSocketMethods).GetMethod("echo")}
+        };
+
+
         public static async Task Handle(HttpContext httpContext, WebSocket webSocket)
         {
             /*We define a certain constant which will represent
@@ -40,15 +50,14 @@ namespace WebSocketHelper
                 {
                     byte[] payloadData = receivedDataBuffer.Array.Where(b => b != 0).ToArray();
 
-                    //Because we know that is a string, we convert it.
-                    string receiveString =
-                        System.Text.Encoding.UTF8.GetString(payloadData, 0, payloadData.Length);
+                    string receiveString = System.Text.Encoding.UTF8.GetString(payloadData, 0, payloadData.Length);
 
-                    //Converts string to byte array.
-                    var newString =
-                        string.Format("Hello, " + receiveString + " ! Time {0}", DateTime.Now);
+                    var wrapper = JsonConvert.DeserializeObject<WebSocketDataWrapper>(receiveString);
 
-                    var bytes = System.Text.Encoding.UTF8.GetBytes(newString);
+                    object methodResult = functions[wrapper.methodName].InvokeWithNamedParameters(null, wrapper.parameters);
+
+                    var jsonString = JsonConvert.SerializeObject(methodResult);
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
 
                     //Sends data back.
                     await webSocket.SendAsync(new ArraySegment<byte>(bytes),
