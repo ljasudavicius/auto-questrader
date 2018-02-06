@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using BLL.DBModels;
 using Microsoft.EntityFrameworkCore;
-using WebSocketHelper;
+using AutoQuestraderWeb.WebSocketHelpers;
 
 namespace AutoQuestraderWeb
 {
@@ -61,7 +61,6 @@ namespace AutoQuestraderWeb
 
             app.UseWebSockets(webSocketOptions);
             app.UseWebSocketRequestHandlerMiddleware();
-
         }
     }
 }
