@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using BLL.DBModels;
 using Microsoft.EntityFrameworkCore;
 using AutoQuestraderWeb.WebSocketHelpers;
+using AutoQuestraderWeb.Hubs;
 
 namespace AutoQuestraderWeb
 {
@@ -29,6 +30,7 @@ namespace AutoQuestraderWeb
             services.AddDbContext<AutoQuestraderContext>(options => options.UseSqlServer(connectionString));
             services.Configure<BLL.Models.AppSettings>(Configuration.GetSection("AppSettings"));
             services.AddMvc();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,14 +55,19 @@ namespace AutoQuestraderWeb
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            var webSocketOptions = new WebSocketOptions()
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(120),
-                ReceiveBufferSize = 4 * 1024
-            };
+            //var webSocketOptions = new WebSocketOptions()
+            //{
+            //    KeepAliveInterval = TimeSpan.FromSeconds(120),
+            //    ReceiveBufferSize = 4 * 1024
+            //};
 
-            app.UseWebSockets(webSocketOptions);
-            app.UseWebSocketRequestHandlerMiddleware();
+            //app.UseWebSockets(webSocketOptions);
+            //app.UseWebSocketRequestHandlerMiddleware();
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<ChatHub>("chat");
+            });
         }
     }
 }
