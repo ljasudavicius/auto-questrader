@@ -38,7 +38,7 @@ namespace AutoQuestraderWeb.Controllers
             loginUrl += "&response_type=code";
             loginUrl += "&redirect_uri=" + redirectUrl;
 
-            response.payload = loginUrl;
+            response.Payload = loginUrl;
 
             return Json(response);
         }
@@ -56,7 +56,7 @@ namespace AutoQuestraderWeb.Controllers
             var request = new RestRequest("/v1/accounts", Method.GET);
             var accounts = client.Execute<AccountsResponse>(request).Data;
 
-            response.payload = accounts;
+            response.Payload = accounts;
 
             return Json(response);
         }

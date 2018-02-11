@@ -65,5 +65,10 @@
     <Build Include="Tables\SettingValues.sql" />
     <Build Include="Tables\StockTarget.sql" />
     <Build Include="Tables\Token.sql" />
+    <Build Include="Tables\User.sql" />
+    <Build Include="Tables\UserAccounts.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="DB.refactorlog" />
   </ItemGroup>
 </Project>

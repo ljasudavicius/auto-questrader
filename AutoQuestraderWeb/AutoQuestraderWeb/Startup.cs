@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using BLL.DBModels;
 using Microsoft.EntityFrameworkCore;
-using AutoQuestraderWeb.WebSocketHelpers;
 using AutoQuestraderWeb.Hubs;
 
 namespace AutoQuestraderWeb
@@ -55,18 +54,9 @@ namespace AutoQuestraderWeb
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            //var webSocketOptions = new WebSocketOptions()
-            //{
-            //    KeepAliveInterval = TimeSpan.FromSeconds(120),
-            //    ReceiveBufferSize = 4 * 1024
-            //};
-
-            //app.UseWebSockets(webSocketOptions);
-            //app.UseWebSocketRequestHandlerMiddleware();
-
             app.UseSignalR(routes =>
             {
-                routes.MapHub<ChatHub>("chat");
+                routes.MapHub<TraderHub>("trader");
             });
         }
     }

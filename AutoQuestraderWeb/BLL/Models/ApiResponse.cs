@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,9 +7,15 @@ namespace BLL.Models
 {
     public class ApiResponse
     {
-        public bool success { get; set; }
+        [JsonProperty(PropertyName = "success")]
+        public bool Success { get; set; }
+
+        [JsonProperty(PropertyName = "payload")]
+        public object Payload { get; set; }
+
         private List<string> _messages;
-        public List<string> messages
+        [JsonProperty(PropertyName = "messages")]
+        public List<string> Messages
         {
             get
             {
@@ -23,17 +30,16 @@ namespace BLL.Models
                 _messages = value;
             }
         }
-        public object payload { get; set; }
 
         public ApiResponse()
         {
-            success = true; //default success to true
+            Success = true; //default success to true
         }
 
         public ApiResponse(object payload)
         {
-            success = true; //default success to true
-            this.payload = payload;
+            Success = true; //default success to true
+            this.Payload = payload;
         }
     }
 }

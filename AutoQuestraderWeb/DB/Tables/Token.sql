@@ -7,5 +7,7 @@
     [ApiServer] VARCHAR(100) NULL, 
     [ExpiresIn] INT NULL, 
     [ExpiresDate] DATETIMEOFFSET NULL, 
-    PRIMARY KEY ([LoginServer])
+    [UserEmail] VARCHAR(100) NOT NULL, 
+    PRIMARY KEY ([LoginServer]), 
+    CONSTRAINT [FK_Token_User] FOREIGN KEY ([UserEmail]) REFERENCES [User]([Email])
 )
