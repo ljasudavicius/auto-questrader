@@ -1,4 +1,0 @@
-﻿CREATE TABLE [dbo].[User]
-(
-	[Email] VARCHAR(100) NOT NULL PRIMARY KEY
-)

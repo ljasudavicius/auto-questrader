@@ -20,7 +20,7 @@ namespace BLL
 
         public AutoQuestraderContext db;
         public RestClient client;
-        public User curUser;
+        public QTModels.User curUser;
         public static readonly string NG_SYMBOL_CAD = "DLR.TO";
         public static readonly string NG_SYMBOL_USD = "DLR.U.TO";
         public static readonly string CURRENCY_USD = "USD";
@@ -71,7 +71,7 @@ namespace BLL
 
             Console.WriteLine("\nGetting User Information...");
 
-            var userResponse = client.Execute<User>(new RestRequest("v1/accounts", Method.GET));
+            var userResponse = client.Execute<QTModels.User>(new RestRequest("v1/accounts", Method.GET));
             curUser = userResponse.Data;
         }
 
@@ -310,11 +310,11 @@ namespace BLL
                 BalancesResponse balances = GetBalances(curAccount.number);
 
                 // calculate total amount of USD that should be in the account
-                var accountCategories = db.AccountCategory.Where(p => p.AccountNumber == curAccount.number);
+                var accountCategories = db.AccountCategories.Where(p => p.Account.Number == curAccount.number);
                 double requiredUSDValue = 0;
                 foreach (var curAccountCategory in accountCategories)
                 {
-                    foreach (var curStockTarget in curAccountCategory.CategoryNameNavigation.StockTarget)
+                    foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
                     {
                         var symbol = GetSymbol(curStockTarget.Symbol);
                         if (symbol.currency == CURRENCY_USD)
@@ -454,11 +454,11 @@ namespace BLL
             PositionsResponse positions = GetPositions(accountNumber);
             BalancesResponse balances = GetBalances(accountNumber);
 
-            var accountCategories = db.AccountCategory.Where(p => p.AccountNumber == accountNumber);
+            var accountCategories = db.AccountCategories.Where(p => p.Account.Number == accountNumber);
 
             foreach (var curAccountCategory in accountCategories)
             {
-                foreach (var curStockTarget in curAccountCategory.CategoryNameNavigation.StockTarget)
+                foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
                 {
                     var symbol = GetSymbol(curStockTarget.Symbol);
                     var quote = GetQuote(symbol.symbolId);
@@ -504,11 +504,11 @@ namespace BLL
             PositionsResponse positions = GetPositions(accountNumber);
             BalancesResponse balances = GetBalances(accountNumber);
 
-            var accountCategories = db.AccountCategory.Where(p => p.AccountNumber == accountNumber);
+            var accountCategories = db.AccountCategories.Where(p => p.Account.Number == accountNumber);
 
             foreach (var curAccountCategory in accountCategories)
             {
-                foreach (var curStockTarget in curAccountCategory.CategoryNameNavigation.StockTarget)
+                foreach (var curStockTarget in curAccountCategory.Category.StockTargets)
                 {
                     var symbol = GetSymbol(curStockTarget.Symbol);
                     var quote = GetQuote(symbol.symbolId);

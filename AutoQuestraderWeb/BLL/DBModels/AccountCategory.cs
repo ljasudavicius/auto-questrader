@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace BLL.DBModels
 {
-    public partial class AccountCategory
+    public class AccountCategory
     {
-        public string AccountNumber { get; set; }
-        public string CategoryName { get; set; }
+        [Key]
+        public int ID { get; set; }
+
         public double Percent { get; set; }
 
-        public Category CategoryNameNavigation { get; set; }
+        public int AccountID { get; set; }
+        public Account Account { get; set; }
+
+        public int CategoryID { get; set; }
+        public Category Category { get; set; }
+
+
     }
 }

@@ -19,14 +19,14 @@ namespace BLL
         {
             var loginServer = live ? liveServer : practiceServer;
 
-            var curToken = db.Token.FirstOrDefault(p => p.LoginServer == loginServer);
+            var curToken = db.Tokens.FirstOrDefault(p => p.LoginServer == loginServer);
 
             if (curToken == null)
             {
                 curToken = new Token();
                 curToken.LoginServer = loginServer;
                 curToken.ExpiresDate = DateTimeOffset.MinValue;
-                db.Token.Add(curToken);
+                db.Tokens.Add(curToken);
             }
 
             if (curToken.ExpiresDate <= DateTimeOffset.UtcNow || forceRefresh)

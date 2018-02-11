@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace BLL.DBModels
 {
-    public partial class StockTarget
+    public class StockTarget
     {
+        [Key]
+        public int ID { get; set; }
+
+        [StringLength(50)]
         public string Symbol { get; set; }
-        public double TargetPercent { get; set; }
-        public string CategoryName { get; set; }
+        public double TargetPercent { get; set; }    
         public bool ShouldBuy { get; set; }
         public bool ShouldSell { get; set; }
 
-        public Category CategoryNameNavigation { get; set; }
+        public string CategoryID { get; set; }
+        public Category Category { get; set; }
     }
 }

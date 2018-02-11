@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace BLL.DBModels
 {
-    public partial class Category
+    public class Category
     {
-        public Category()
-        {
-            AccountCategory = new HashSet<AccountCategory>();
-            StockTarget = new HashSet<StockTarget>();
-        }
+        [Key]
+        public int ID { get; set; }
 
+        [StringLength(50)]
         public string Name { get; set; }
 
-        public ICollection<AccountCategory> AccountCategory { get; set; }
-        public ICollection<StockTarget> StockTarget { get; set; }
+        public ICollection<AccountCategory> AccountCategories { get; set; }
+        public ICollection<StockTarget> StockTargets { get; set; }
     }
 }
