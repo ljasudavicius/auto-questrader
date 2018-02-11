@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace BLL.DBModels
 {
@@ -19,4 +20,18 @@ namespace BLL.DBModels
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Account> Accounts { get; set; } 
     }
+
+    //public class AutoQuestraderContextFactory : IDesignTimeDbContextFactory<AutoQuestraderContext>
+    //{
+    //    public AutoQuestraderContext CreateDbContext(string[] args)
+    //    {
+    //        var optionsBuilder = new DbContextOptionsBuilder<AutoQuestraderContext>();
+
+    //        var connectionString = Configuration.GetConnectionString("AutoQuestraderDatabase");
+
+    //        optionsBuilder.UseSqlServer(connectionString);
+     
+    //        return new AutoQuestraderContext(optionsBuilder.Options);
+    //    }
+    //}
 }

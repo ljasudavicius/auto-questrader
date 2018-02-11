@@ -15,7 +15,7 @@ namespace BLL.DBModels
         public bool ShouldBuy { get; set; }
         public bool ShouldSell { get; set; }
 
-        public string CategoryID { get; set; }
+        public int CategoryID { get; set; }
         public Category Category { get; set; }
     }
 }

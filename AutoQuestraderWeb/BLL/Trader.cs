@@ -611,9 +611,9 @@ namespace BLL
            
             var body = new
             {
-                accountNumber = accountNumber,
-                symbolId = symbolId,
-                quantity = quantity,
+                accountNumber,
+                symbolId,
+                quantity,
                 icebergQuantity = 1,
                 isAllOrNone = false,
                 isAnonymous = false,

@@ -5,6 +5,8 @@
 <br />
 <div class="container">
     <input type="button" id="qtLogin" value="Login To Questrade" disabled />
+
+    <textarea id="accounts" readonly></textarea>
 </div>
 
 <!--Reference the SignalR library. -->
@@ -29,15 +31,26 @@
         });
 
         startConnection('/trader', email, function (connection) {
+
             connection.on('recievedLoginUrl', function (response) {
                 if (response.success) {
                     loginUrl = response.payload;
                     document.getElementById('qtLogin').disabled = false;
                 }
             });
+
+            connection.on('recievedAuthToken', function (response) {
+                connection.invoke('RequestAccounts');
+            });
+
+            connection.on('recievedAccounts', function (response) {
+                document.getElementById('accounts').value = response;            
+            });
+
         })
         .then(function (connection) {
             console.log('connection started');
+
             //document.getElementById('sendmessage').addEventListener('click', function (event) {
             //    // Call the Send method on the hub.
             //    connection.invoke('send', name, messageInput.value);

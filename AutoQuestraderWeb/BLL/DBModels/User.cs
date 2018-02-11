@@ -13,11 +13,14 @@ namespace BLL.DBModels
         [StringLength(100)]
         public string Email { get; set; }
         [StringLength(100)]
-        public string QuestradeID { get; set; }    
+        public string QuestradeID { get; set; }
+        [StringLength(100)]
+        public string ConnectionId { get; set; }
 
-        public int TokenID { get; set; }
         public Token Token { get; set; }
 
         public ICollection<Account> Accounts { get; set; }
+        //public ICollection<Token> Tokens { get; set; }
+
     }
 }

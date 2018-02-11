@@ -13,6 +13,8 @@ using RestSharp;
 using BLL.QTModels;
 using Newtonsoft.Json;
 using BLL.Misc;
+using AutoQuestraderWeb.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AutoQuestraderWeb.Controllers
 {
@@ -20,11 +22,13 @@ namespace AutoQuestraderWeb.Controllers
     {
         AutoQuestraderContext db;
         AppSettings appSettings;
+        IHubContext<TraderHub> traderHub;
 
-        public HomeController(AutoQuestraderContext db, IOptions<AppSettings> appSettings)
+        public HomeController(AutoQuestraderContext db, IOptions<AppSettings> appSettings, IHubContext<TraderHub> traderHub)
         {
             this.db = db;
             this.appSettings = appSettings.Value;
+            this.traderHub = traderHub;
         }
 
         public IActionResult GetLoginUrl(string email) {
@@ -49,16 +53,26 @@ namespace AutoQuestraderWeb.Controllers
 
             var email = MiscHelpers.Base64Decode(a);
 
+            var curUser = db.Users.FirstOrDefault(p => p.Email == email);
+
             var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, appSettings.BaseUrl, true);
-            RestClient client = new RestClient(curToken.ApiServer);
-            client.AddDefaultHeader("Authorization", curToken.TokenType + " " + curToken.AccessToken);
 
-            var request = new RestRequest("/v1/accounts", Method.GET);
-            var accounts = client.Execute<AccountsResponse>(request).Data;
+            if (curUser.Token == null)
+            {
+                curToken.UserID = curUser.ID;
+                db.Tokens.Add(curToken);
+            }
+            else {
+                curToken.ID = curUser.Token.ID;
+                curUser.Token = curToken;
+            }
 
-            response.Payload = accounts;
+            db.SaveChanges();
 
-            return Json(response);
+            //TODO: I think this has potential to be a race condition
+            traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", response);
+
+            return View();
         }
 
         public IActionResult Index(string code)
