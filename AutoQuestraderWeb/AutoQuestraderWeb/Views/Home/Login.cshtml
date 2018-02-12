@@ -8,17 +8,9 @@
     <text>
     <br />
     <div class="container">
-        <input type="button" id="qtLogin" value="Login To Questrade" disabled />
+        <input type="button" id="qtLogin" value="Socket Connecting..." disabled />
 
-        <textarea id="accounts" readonly></textarea>
-
-        <input type="button" id="qtLogin2" value="Login To Questrade2" disabled />
-
-
-        <br />
-        @ViewBag.testResponse
-        <br />
-        @ViewBag.email
+        <textarea id="accounts" cols="100" rows="20" readonly></textarea>
     </div>
 
     <!--Reference the SignalR library. -->
@@ -42,16 +34,13 @@
             window.open(loginUrl, '_blank', 'width=800,height=600');
         });
 
-        document.getElementById('qtLogin2').addEventListener('click', function (event) {
-            window.open("@ViewBag.testUrl", '_blank', 'width=800,height=600');
-        });
-
         startConnection('/trader', email, function (connection) {
 
             connection.on('recievedLoginUrl', function (response) {
                 if (response.success) {
                     loginUrl = response.payload;
                     document.getElementById('qtLogin').disabled = false;
+                    document.getElementById('qtLogin').value = "Login To Questrade";
                 }
             });
 
@@ -60,7 +49,7 @@
             });
 
             connection.on('recievedAccounts', function (response) {
-                document.getElementById('accounts').value = response;
+                document.getElementById('accounts').value = JSON.stringify(response);
             });
 
         })
@@ -128,15 +117,12 @@ else
     Thank you for loggin in. Closing window in 3 seconds.
 
     <br />
-    @ViewBag.e
-
 
     <script type="text/javascript">
-        //document.addEventListener('DOMContentLoaded', function () {
-        //    setTimeout(function () { window.close() }, 3000);
-        //});
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () { window.close() }, 3000);
+        });
     </script>
 
-    }
     </text>
 }

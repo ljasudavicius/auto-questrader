@@ -33,13 +33,26 @@ namespace BLL.Models
 
         public ApiResponse()
         {
-            Success = true; //default success to true
+            Success = true;
         }
-
+    
         public ApiResponse(object payload)
         {
-            Success = true; //default success to true
-            this.Payload = payload;
+            Success = true;
+            Payload = payload;
         }
+
+        public ApiResponse(object payload = null, bool success = true, string message = null)
+            :this(payload, success, new List<string>() { message })
+        {
+        }
+
+        public ApiResponse(object payload = null, bool success = true, List<string> messages = null)
+        {
+            Success = success; 
+            this.Payload = payload;
+            this.Messages = messages;
+        }
+
     }
 }

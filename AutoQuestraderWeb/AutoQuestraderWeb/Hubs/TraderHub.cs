@@ -4,6 +4,7 @@ using BLL.Misc;
 using BLL.Models;
 using BLL.QTModels;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using System;
@@ -26,23 +27,18 @@ namespace AutoQuestraderWeb.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            var response = new ApiResponse();
-
             var email = Context.Connection.GetHttpContext().Request.Query["email"].ToString().Trim().ToLower();
             var QTAppKeyOverride = Context.Connection.GetHttpContext().Request.Query["QTAppKeyOverride"];
 
             //TODO: Add proper email validation
             if (string.IsNullOrEmpty(email))
             {
-                response.Success = false;
-                response.Messages.Add("Email is invalid.");
-                await Clients.Client(Context.ConnectionId).InvokeAsync("recievedLoginUrl", response);
+                await Clients.Client(Context.ConnectionId).InvokeAsync("recievedLoginUrl", new ApiResponse(success: false, message: "Email is invalid."));
+                return;
             }
 
-            try
-            {
-                var curUser = db.Users.FirstOrDefault(p => p.Email.ToLower() == email);
-           
+            var curUser = db.Users.Include(p => p.Token).FirstOrDefault(p => p.Email.ToLower() == email);
+
             if (curUser == null)
             {
                 curUser = new BLL.DBModels.User();
@@ -53,31 +49,38 @@ namespace AutoQuestraderWeb.Hubs
             curUser.ConnectionId = Context.ConnectionId;
             db.SaveChanges();
 
-            if (curUser.Token != null) {
-                //TODO: attempt to login with existing token
-            }
-            }
-            catch (Exception e)
+            if (curUser.Token != null)
             {
+                //TODO: make a proper function for this
+                try { 
+                    RestClient client = new RestClient(curUser.Token.ApiServer);
+                    client.AddDefaultHeader("Authorization", curUser.Token.TokenType + " " + curUser.Token.AccessToken);
+
+                    var request = new RestRequest("/v1/accounts", Method.GET);
+                    var accounts = client.Execute<AccountsResponse>(request).Data;
+
+                    await Clients.All.InvokeAsync("recievedAccounts", new ApiResponse(accounts));
+                }
+                catch {
+                } 
             }
+
             var redirectUrl = appSettings.BaseUrl + GlobalVars.LOGIN_REDIRECT_PATH + "?a=" + MiscHelpers.Base64Encode(email);
 
             var loginUrl = GlobalVars.QT_OAUTH_LOGIN_URL;
-            loginUrl += "?client_id=" + (string.IsNullOrEmpty(QTAppKeyOverride)? appSettings.QuestradeaAppKey : QTAppKeyOverride.ToString());
+            loginUrl += "?client_id=" + (string.IsNullOrEmpty(QTAppKeyOverride) ? appSettings.QuestradeaAppKey : QTAppKeyOverride.ToString());
             loginUrl += "&response_type=code";
             loginUrl += "&redirect_uri=" + redirectUrl;
 
-            response.Payload = loginUrl;
-          
-
-            await Clients.Client(Context.ConnectionId).InvokeAsync("recievedLoginUrl", response);
+            await Clients.Client(Context.ConnectionId).InvokeAsync("recievedLoginUrl", new ApiResponse(loginUrl));
         }
 
         public override async Task OnDisconnectedAsync(Exception ex)
         {
             var curUser = db.Users.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
 
-            if (curUser != null) {
+            if (curUser != null)
+            {
                 curUser.ConnectionId = null;
                 db.SaveChanges();
             }
@@ -87,13 +90,15 @@ namespace AutoQuestraderWeb.Hubs
         {
             var response = new ApiResponse();
 
-            var curUser = db.Users.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
-            if (curUser == null || curUser.Token == null) {
+            var curUser = db.Users.Include(p => p.Token).FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
+            if (curUser == null || curUser.Token == null)
+            {
                 response.Success = false;
                 response.Messages.Add("Invalid User Session");
                 await Clients.Client(Context.ConnectionId).InvokeAsync("recievedAccounts", response);
             }
 
+            //TODO: make a proper function for this
             RestClient client = new RestClient(curUser.Token.ApiServer);
             client.AddDefaultHeader("Authorization", curUser.Token.TokenType + " " + curUser.Token.AccessToken);
 
@@ -104,6 +109,6 @@ namespace AutoQuestraderWeb.Hubs
 
             await Clients.All.InvokeAsync("recievedAccounts", response);
         }
-       
+
     }
 }
