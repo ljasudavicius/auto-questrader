@@ -52,22 +52,22 @@
                 });
 
             })
-                .then(function (connection) {
-                    console.log('connection started');
+            .then(function (connection) {
+                console.log('connection started');
 
-                    //document.getElementById('sendmessage').addEventListener('click', function (event) {
-                    //    // Call the Send method on the hub.
-                    //    connection.invoke('send', name, messageInput.value);
+                //document.getElementById('sendmessage').addEventListener('click', function (event) {
+                //    // Call the Send method on the hub.
+                //    connection.invoke('send', name, messageInput.value);
 
-                    //    // Clear text box and reset focus for next comment.
-                    //    messageInput.value = '';
-                    //    messageInput.focus();
-                    //    event.preventDefault();
-                    //});
-                })
-                .catch(error => {
-                    console.error(error.message);
-                });
+                //    // Clear text box and reset focus for next comment.
+                //    messageInput.value = '';
+                //    messageInput.focus();
+                //    event.preventDefault();
+                //});
+            })
+            .catch(error => {
+                console.error(error.message);
+            });
 
 
             // Starts a connection with transport fallback - if the connection cannot be started using
