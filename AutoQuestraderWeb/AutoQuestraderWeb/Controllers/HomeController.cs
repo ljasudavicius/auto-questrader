@@ -47,43 +47,107 @@ namespace AutoQuestraderWeb.Controllers
             return Json(response);
         }
 
-        public IActionResult Login(string code, string a) {
+        public async Task<IActionResult> Login(string code, string a) {
 
-            var response = new ApiResponse();
-
-            var email = MiscHelpers.Base64Decode(a);
-
-            var curUser = db.Users.FirstOrDefault(p => p.Email == email);
-
-            var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, appSettings.BaseUrl, true);
-
-            if (curUser.Token == null)
+            ViewBag.codeProvided = false;
+            if (!string.IsNullOrEmpty(code))
             {
-                curToken.UserID = curUser.ID;
-                db.Tokens.Add(curToken);
-            }
-            else {
-                curToken.ID = curUser.Token.ID;
-                curUser.Token = curToken;
-            }
+                ViewBag.codeProvided = true;
+                try
+                {
+                    var response = new ApiResponse();
 
-            db.SaveChanges();
+                    var email = MiscHelpers.Base64Decode(a);
 
-            //TODO: I think this has potential to be a race condition
-            traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", response);
+                    var curUser = db.Users.FirstOrDefault(p => p.Email == email);
+
+                    if (curUser == null)
+                    {
+                        response.Success = false;
+                        response.Messages.Add("No user found with provided email.");
+                        await traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", response);
+                        return View();
+                    }
+
+                    var redirectUrl = appSettings.BaseUrl + GlobalVars.LOGIN_REDIRECT_PATH;
+
+                    var loginServer = "https://login.questrade.com";
+                    var authClient = new RestClient(loginServer);
+
+                    var request = new RestRequest("oauth2/token", Method.GET);
+                    //request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
+                    request.AddParameter("client_id", appSettings.QuestradeaAppKey);
+                    request.AddParameter("code", code);
+                    request.AddParameter("grant_type", "authorization_code");
+                    request.AddParameter("redirect_uri", redirectUrl);
+
+                    var responseToken = authClient.Execute<AuthTokenResponse>(request);
+
+                    await traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", responseToken.Content);
+
+                    var curToken = new Token();
+
+                    curToken.ApiServer = responseToken.Data.api_server;
+                    curToken.AccessToken = responseToken.Data.access_token;
+                    curToken.ExpiresIn = responseToken.Data.expires_in;
+                    curToken.ExpiresDate = DateTimeOffset.UtcNow.AddSeconds(responseToken.Data.expires_in - 30); // create a 30 second buffer to account for network slowness
+                    curToken.RefreshToken = responseToken.Data.refresh_token;
+                    curToken.TokenType = responseToken.Data.token_type;
+
+
+                    //var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, redirectUrl, true);
+
+                    if (curToken == null)
+                    {
+                        response.Messages.Add("2");
+                        traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", response);
+                        return View();
+                    }
+
+                    if (curUser.Token == null)
+                    {
+                        curToken.UserID = curUser.ID;
+                        db.Tokens.Add(curToken);
+                    }
+                    else
+                    {
+                        curToken.ID = curUser.Token.ID;
+                        curUser.Token = curToken;
+                    }
+
+                    db.SaveChanges();
+
+                    //TODO: I think this has potential to be a race condition
+                    traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", response);
+                }
+                catch (Exception e)
+                {
+                    ViewBag.e = JsonConvert.SerializeObject(e);
+                }
+            }
 
             return View();
         }
 
-        public IActionResult Index(string code)
+        public IActionResult Index(string code, string a)
         {
             // var trader = new Trader(db);
             // trader.Main();
 
-            ViewBag.QTAppKey = appSettings.QuestradeaAppKey;
+            var email = MiscHelpers.Base64Decode(a);
 
-            if (!string.IsNullOrEmpty(code)) {
+            var redirectUrl = appSettings.BaseUrl + "?a=" + MiscHelpers.Base64Encode("luke");
 
+            var loginUrl = "https://login.questrade.com/oauth2/authorize";
+            loginUrl += "?client_id=" + appSettings.QuestradeaAppKey;
+            loginUrl += "&response_type=code";
+            loginUrl += "&redirect_uri=" + redirectUrl;
+
+            ViewBag.testUrl = loginUrl;
+            ViewBag.email = email;
+
+            if (!string.IsNullOrEmpty(code))
+            {
                 try
                 {
                     var curToken = AuthHelper.GetRefreshToken(appSettings.QuestradeaAppKey, code, appSettings.BaseUrl, true);
@@ -95,7 +159,8 @@ namespace AutoQuestraderWeb.Controllers
 
                     ViewBag.testResponse = JsonConvert.SerializeObject(accounts);
                 }
-                catch {
+                catch
+                {
                     ViewBag.message = "Error reading from QT, please try again.";
                 }
             }

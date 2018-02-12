@@ -8,7 +8,7 @@ namespace BLL.DBModels
     {
         public static void Initialize(AutoQuestraderContext context)
         {
-            context.Database.EnsureDeleted();
+            //context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
         }
     }
