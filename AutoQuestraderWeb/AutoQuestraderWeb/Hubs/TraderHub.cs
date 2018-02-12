@@ -59,7 +59,7 @@ namespace AutoQuestraderWeb.Hubs
                     var request = new RestRequest("/v1/accounts", Method.GET);
                     var accounts = client.Execute<AccountsResponse>(request).Data;
 
-                    await Clients.All.InvokeAsync("recievedAccounts", new ApiResponse(accounts));
+                    await Clients.Client(Context.ConnectionId).InvokeAsync("recievedAccounts", new ApiResponse(accounts));
                 }
                 catch {
                 } 
@@ -88,14 +88,11 @@ namespace AutoQuestraderWeb.Hubs
 
         public async Task RequestAccounts()
         {
-            var response = new ApiResponse();
-
             var curUser = db.Users.Include(p => p.Token).FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
             if (curUser == null || curUser.Token == null)
             {
-                response.Success = false;
-                response.Messages.Add("Invalid User Session");
-                await Clients.Client(Context.ConnectionId).InvokeAsync("recievedAccounts", response);
+                await Clients.Client(Context.ConnectionId).InvokeAsync("recievedAccounts", new ApiResponse(success: false, message: "Invalid User Session"));
+                return;
             }
 
             //TODO: make a proper function for this
@@ -105,9 +102,7 @@ namespace AutoQuestraderWeb.Hubs
             var request = new RestRequest("/v1/accounts", Method.GET);
             var accounts = client.Execute<AccountsResponse>(request).Data;
 
-            response.Payload = accounts;
-
-            await Clients.All.InvokeAsync("recievedAccounts", response);
+            await Clients.Client(Context.ConnectionId).InvokeAsync("recievedAccounts", new ApiResponse(accounts));
         }
 
     }
