@@ -30,11 +30,22 @@ namespace AutoQuestraderWeb
             services.Configure<BLL.Models.AppSettings>(Configuration.GetSection("AppSettings"));
             services.AddMvc();
             services.AddSignalR();
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            //TODO: restrict access once we determine what domains we will be using
+            app.UseCors(
+                options => options
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()  
+            );
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -58,6 +69,9 @@ namespace AutoQuestraderWeb
             {
                 routes.MapHub<TraderHub>("trader");
             });
+
+
+
         }
     }
 }

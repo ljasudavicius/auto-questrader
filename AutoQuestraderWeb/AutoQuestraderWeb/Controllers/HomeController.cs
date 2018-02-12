@@ -32,22 +32,6 @@ namespace AutoQuestraderWeb.Controllers
             this.traderHub = traderHub;
         }
 
-        public IActionResult GetLoginUrl(string email)
-        {
-            var response = new ApiResponse();
-
-            var redirectUrl = appSettings.BaseUrl + GlobalVars.LOGIN_REDIRECT_PATH + "?a=" + MiscHelpers.Base64Encode(email);
-
-            var loginUrl = "https://login.questrade.com/oauth2/authorize";
-            loginUrl += "?client_id=" + appSettings.QuestradeaAppKey;
-            loginUrl += "&response_type=code";
-            loginUrl += "&redirect_uri=" + redirectUrl;
-
-            response.Payload = loginUrl;
-
-            return Json(response);
-        }
-
         public async Task<IActionResult> Login(string code, string a)
         {
             ViewBag.codeProvided = false;
@@ -99,7 +83,6 @@ namespace AutoQuestraderWeb.Controllers
                 catch (Exception e)
                 {
                     await traderHub.Clients.Client(curUser.ConnectionId).InvokeAsync("recievedAuthToken", e);
-
                 }
             }
 

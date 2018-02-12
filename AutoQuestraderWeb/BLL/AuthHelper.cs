@@ -70,7 +70,9 @@ namespace BLL
                 request.AddParameter("client_id", client_id);
                 request.AddParameter("code", code);
                 request.AddParameter("grant_type", "authorization_code");
-                request.AddParameter("redirect_uri", redirectUri);
+
+                if(redirectUri != null)
+                    request.AddParameter("redirect_uri", redirectUri);
 
                 responseToken = authClient.Execute<AuthTokenResponse>(request);
 
