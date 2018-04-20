@@ -16,6 +16,9 @@ using BLL.Misc;
 using AutoQuestraderWeb.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace AutoQuestraderWeb.Controllers
 {
@@ -32,7 +35,38 @@ namespace AutoQuestraderWeb.Controllers
             this.traderHub = traderHub;
         }
 
-        public async Task<IActionResult> Login(string code, string a)
+        public IActionResult AuthTest()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(string email, string password)
+        {
+            if (string.IsNullOrEmpty(email)) {
+                return Json(new ApiResponse(success: false, message: "Error: No email provided"));
+            }
+
+            var identity = new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Email, email),
+            }, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principle = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principle);
+
+            return Json(new ApiResponse(message: "Logged in."));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Json(new ApiResponse(message: "Logged out."));
+        }
+        public async Task<IActionResult> QTLogin(string code, string a)
         {
             ViewBag.codeProvided = false;
             if (!string.IsNullOrEmpty(code))

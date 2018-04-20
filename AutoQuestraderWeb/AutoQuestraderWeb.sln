@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoQuestraderWeb", "AutoQu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BLL", "BLL\BLL.csproj", "{0C4F48BB-390C-486D-81E2-2F3FAE1B8EB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "WebApplication1\WebApplication1.csproj", "{9D7B6BAF-25D2-49CC-94AF-5207E99E034A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0C4F48BB-390C-486D-81E2-2F3FAE1B8EB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C4F48BB-390C-486D-81E2-2F3FAE1B8EB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C4F48BB-390C-486D-81E2-2F3FAE1B8EB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D7B6BAF-25D2-49CC-94AF-5207E99E034A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D7B6BAF-25D2-49CC-94AF-5207E99E034A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D7B6BAF-25D2-49CC-94AF-5207E99E034A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D7B6BAF-25D2-49CC-94AF-5207E99E034A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

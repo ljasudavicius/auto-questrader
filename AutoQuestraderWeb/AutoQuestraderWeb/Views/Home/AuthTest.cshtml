@@ -3,12 +3,13 @@
     ViewData["Title"] = "Login";
 }
 
-@if (!ViewBag.codeProvided)
-{
     <text>
 
     <br />
     <div class="container">
+        <input type="text" id="email" name="email" placeholder="Email" />
+        <input type="text" id="password"name="password" placeholder="Password" />
+
         <input type="button" id="qtLogin" value="Socket Connecting..." disabled />
 
         <textarea id="accounts" cols="100" rows="20" readonly></textarea>
@@ -103,22 +104,4 @@
     </script>
 
     </text>
-}
-else
-{
-    <text>
 
-    <h2>Login Complete!</h2>
-
-    Thank you for loggin in. Closing window in 3 seconds.
-
-    <br />
-
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function () { window.close() }, 3000);
-        });
-    </script>
-
-    </text>
-}

@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using BLL.DBModels;
 using Microsoft.EntityFrameworkCore;
 using AutoQuestraderWeb.Hubs;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AutoQuestraderWeb
 {
@@ -28,9 +30,14 @@ namespace AutoQuestraderWeb
 
             services.AddDbContext<AutoQuestraderContext>(options => options.UseSqlServer(connectionString));
             services.Configure<BLL.Models.AppSettings>(Configuration.GetSection("AppSettings"));
-            services.AddMvc();
+            services.AddMvc(options => {
+                options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+                options.Filters.Add(new RequireHttpsAttribute());
+            });
             services.AddSignalR();
             services.AddCors();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +64,8 @@ namespace AutoQuestraderWeb
             }
 
             app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {
